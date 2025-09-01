@@ -42,8 +42,9 @@ class AzureMapsConfig {
         // 1. Try from global ENV_CONFIG (set by env-config.js)
         if (window.ENV_CONFIG && window.ENV_CONFIG.AZURE_MAPS_SUBSCRIPTION_KEY) {
             const key = window.ENV_CONFIG.AZURE_MAPS_SUBSCRIPTION_KEY;
-            // Don't use the placeholder value
-            if (key && !key.startsWith('${')) {
+            // Don't use the placeholder value or undefined
+            if (key && !key.startsWith('${') && key !== 'undefined' && key.trim() !== '') {
+                console.log('Using Azure Maps key from ENV_CONFIG');
                 return key;
             }
         }
@@ -74,10 +75,11 @@ class AzureMapsConfig {
      * Get API key for local development
      */
     getLocalDevKey() {
-        // For local development, we'll use a hardcoded key temporarily
-        // In a real-world scenario, you might want to fetch this from a local config endpoint
-        // that reads from environment variables
-        return 'gx0bl6dK1vahKbKLInsN36cY_hl-c7LHW5-rJzx2ArE';
+        // For local development, the key should be set via localStorage
+        // Instructions are provided in env-config.js console logs
+        console.warn('Local development key should be set via localStorage.');
+        console.warn('Run: localStorage.setItem("AZURE_MAPS_DEV_KEY", "your-key-here")');
+        return null;
     }
 
     /**

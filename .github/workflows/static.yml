@@ -31,6 +31,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      
+      - name: Inject Azure Maps Key
+        run: |
+          # Replace the placeholder with the actual key in env-config.js
+          sed -i "s|\${AZURE_MAPS_SUBSCRIPTION_KEY}|${{ secrets.AZURE_MAPS_SUBSCRIPTION_KEY }}|g" static/js/env-config.js
+        env:
+          AZURE_MAPS_SUBSCRIPTION_KEY: ${{ secrets.AZURE_MAPS_SUBSCRIPTION_KEY }}
+      
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

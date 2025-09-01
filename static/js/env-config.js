@@ -1,21 +1,27 @@
 /**
- * Environment Configuration Injector for Local Development
- * This script injects environment variables into the page for local development
+ * Environment Configuration Injector
+ * This script handles environment variables for both local development and production
  */
 
-// This will be populated by the development server or build process
+// Initialize global ENV_CONFIG
 window.ENV_CONFIG = window.ENV_CONFIG || {};
 
-// For local development, we'll try to load from a local config endpoint
+// For local development, try to load from localStorage or prompt user
 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    // In local development, we'll use a different approach
-    // Since we can't directly access process.env in the browser,
-    // we'll create a config endpoint or use a build-time replacement
     console.log('Running in local development mode');
-}
-
-// Fallback configuration for GitHub Pages
-if (!window.ENV_CONFIG.AZURE_MAPS_SUBSCRIPTION_KEY) {
-    // This will be replaced by GitHub Actions during deployment
+    
+    // Try to get from localStorage first (where dev can store it)
+    const localKey = localStorage.getItem('AZURE_MAPS_DEV_KEY');
+    if (localKey && localKey.trim() !== '') {
+        window.ENV_CONFIG.AZURE_MAPS_SUBSCRIPTION_KEY = localKey;
+        console.log('Using Azure Maps key from localStorage');
+    } else {
+        // If no key in localStorage, log instructions for developer
+        console.warn('Azure Maps key not found in localStorage. To set it, run:');
+        console.warn('localStorage.setItem("AZURE_MAPS_DEV_KEY", "your-key-here")');
+        console.warn('Then refresh the page.');
+    }
+} else {
+    // Production deployment - this will be replaced by GitHub Actions during deployment
     window.ENV_CONFIG.AZURE_MAPS_SUBSCRIPTION_KEY = '${AZURE_MAPS_SUBSCRIPTION_KEY}';
 }

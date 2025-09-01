@@ -43,13 +43,22 @@ jobs:
       env:
         git_token: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        echo "🔍 Debug Information:"
+        echo "  - GitHub Actor: ${{ github.actor }}"
+        echo "  - Repository: ${{ github.repository }}"
+        echo "  - Token prefix: ${git_token:0:8}..."
+        echo ""
+        
         # Use npm script if available, otherwise direct node command
         if [ -f package.json ] && npm run | grep -q "build-languages"; then
+          echo "🔧 Using npm script to generate language data..."
           npm run build-languages
         else
+          echo "🔧 Using direct node command to generate language data..."
           cd static/js
           node generate-language-data.js
         fi
+      continue-on-error: false
       
     - name: Check for changes
       id: verify-changed-files

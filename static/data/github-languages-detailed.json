@@ -1,34 +1,24 @@
 {
-  "lastUpdated": "2025-08-28T07:20:35.311Z",
+  "lastUpdated": "2025-09-01T09:10:30.076Z",
   "repositories": [
+    {
+      "name": "shawnxxy.github.io",
+      "full_name": "ShawnXxy/shawnxxy.github.io",
+      "description": null,
+      "language": "JavaScript",
+      "updated_at": "2025-09-01T09:03:58Z",
+      "created_at": "2025-08-26T03:17:52Z",
+      "size": 18790,
+      "stargazers_count": 0
+    },
     {
       "name": "ShawnXxy",
       "full_name": "ShawnXxy/ShawnXxy",
       "description": null,
       "language": null,
-      "updated_at": "2025-08-28T06:33:54Z",
+      "updated_at": "2025-09-01T08:32:37Z",
       "created_at": "2024-10-06T11:28:28Z",
-      "size": 10479,
-      "stargazers_count": 0
-    },
-    {
-      "name": "shawnxxy.github.io",
-      "full_name": "ShawnXxy/shawnxxy.github.io",
-      "description": null,
-      "language": null,
-      "updated_at": "2025-08-26T03:23:03Z",
-      "created_at": "2025-08-26T03:17:52Z",
-      "size": 0,
-      "stargazers_count": 0
-    },
-    {
-      "name": "DevLore",
-      "full_name": "ShawnXxy/DevLore",
-      "description": "folders  organized to save project files used to work on in different orgs",
-      "language": "PHP",
-      "updated_at": "2025-08-26T02:32:35Z",
-      "created_at": "2025-04-14T08:46:01Z",
-      "size": 36301,
+      "size": 9990,
       "stargazers_count": 0
     },
     {
@@ -52,36 +42,6 @@
       "stargazers_count": 0
     },
     {
-      "name": "BrainBits",
-      "full_name": "ShawnXxy/BrainBits",
-      "description": null,
-      "language": "Java",
-      "updated_at": "2025-07-20T11:06:48Z",
-      "created_at": "2025-04-14T08:57:42Z",
-      "size": 3006,
-      "stargazers_count": 0
-    },
-    {
-      "name": "OrcasCopilot",
-      "full_name": "ShawnXxy/OrcasCopilot",
-      "description": null,
-      "language": "Python",
-      "updated_at": "2025-07-10T08:26:53Z",
-      "created_at": "2024-10-07T04:36:52Z",
-      "size": 40345,
-      "stargazers_count": 0
-    },
-    {
-      "name": "OrcasGPT",
-      "full_name": "ShawnXxy/OrcasGPT",
-      "description": null,
-      "language": "C#",
-      "updated_at": "2025-04-25T12:26:45Z",
-      "created_at": "2023-04-02T09:39:00Z",
-      "size": 4070,
-      "stargazers_count": 1
-    },
-    {
       "name": "DocDown",
       "full_name": "ShawnXxy/DocDown",
       "description": "Converting Word doc to markdown .md file",
@@ -89,16 +49,6 @@
       "updated_at": "2025-04-20T02:15:33Z",
       "created_at": "2025-01-30T05:30:46Z",
       "size": 7,
-      "stargazers_count": 0
-    },
-    {
-      "name": "Scriptopia",
-      "full_name": "ShawnXxy/Scriptopia",
-      "description": null,
-      "language": "JavaScript",
-      "updated_at": "2025-04-17T07:09:45Z",
-      "created_at": "2025-04-09T08:38:29Z",
-      "size": 171850,
       "stargazers_count": 0
     },
     {
@@ -110,16 +60,6 @@
       "created_at": "2022-02-08T05:34:16Z",
       "size": 4529,
       "stargazers_count": 1
-    },
-    {
-      "name": "AzMySQL-Perf-Checker",
-      "full_name": "ShawnXxy/AzMySQL-Perf-Checker",
-      "description": null,
-      "language": "PowerShell",
-      "updated_at": "2025-04-10T05:46:29Z",
-      "created_at": "2023-10-25T02:38:18Z",
-      "size": 5436,
-      "stargazers_count": 0
     },
     {
       "name": "AzMy-Metrics-Bin",
@@ -142,66 +82,6 @@
       "stargazers_count": 1
     },
     {
-      "name": "CasePokemon",
-      "full_name": "ShawnXxy/CasePokemon",
-      "description": null,
-      "language": "C#",
-      "updated_at": "2024-10-12T10:29:16Z",
-      "created_at": "2024-10-12T01:38:52Z",
-      "size": 10,
-      "stargazers_count": 0
-    },
-    {
-      "name": "OrcasHammer",
-      "full_name": "ShawnXxy/OrcasHammer",
-      "description": null,
-      "language": null,
-      "updated_at": "2024-10-12T08:08:02Z",
-      "created_at": "2024-10-12T08:07:58Z",
-      "size": 0,
-      "stargazers_count": 0
-    },
-    {
-      "name": "Around",
-      "full_name": "ShawnXxy/Around",
-      "description": "LBS based Android App for Tourists and Local Residents ",
-      "language": "Java",
-      "updated_at": "2024-10-12T07:46:25Z",
-      "created_at": "2017-08-28T00:06:27Z",
-      "size": 1895,
-      "stargazers_count": 0
-    },
-    {
-      "name": "Oops",
-      "full_name": "ShawnXxy/Oops",
-      "description": null,
-      "language": "Java",
-      "updated_at": "2024-10-12T07:44:19Z",
-      "created_at": "2017-06-24T10:51:35Z",
-      "size": 68,
-      "stargazers_count": 0
-    },
-    {
-      "name": "Algorithm",
-      "full_name": "ShawnXxy/Algorithm",
-      "description": null,
-      "language": "Java",
-      "updated_at": "2024-10-12T07:42:47Z",
-      "created_at": "2017-06-02T22:14:16Z",
-      "size": 163,
-      "stargazers_count": 0
-    },
-    {
-      "name": "vitaw",
-      "full_name": "ShawnXxy/vitaw",
-      "description": null,
-      "language": "HTML",
-      "updated_at": "2024-06-15T03:35:32Z",
-      "created_at": "2021-09-27T07:43:43Z",
-      "size": 1772,
-      "stargazers_count": 0
-    },
-    {
       "name": "Grafana-template-to-monitor-Azure-MySQL-Flexible",
       "full_name": "ShawnXxy/Grafana-template-to-monitor-Azure-MySQL-Flexible",
       "description": null,
@@ -210,88 +90,27 @@
       "created_at": "2023-11-02T06:54:02Z",
       "size": 67,
       "stargazers_count": 0
-    },
-    {
-      "name": "orcastitler",
-      "full_name": "ShawnXxy/orcastitler",
-      "description": null,
-      "language": "JavaScript",
-      "updated_at": "2023-04-23T10:51:24Z",
-      "created_at": "2021-09-27T07:42:43Z",
-      "size": 1145,
-      "stargazers_count": 0
-    },
-    {
-      "name": "Profile",
-      "full_name": "ShawnXxy/Profile",
-      "description": "Personal website/portfolio",
-      "language": "JavaScript",
-      "updated_at": "2021-10-14T03:38:50Z",
-      "created_at": "2019-03-04T07:03:00Z",
-      "size": 407849,
-      "stargazers_count": 0
     }
   ],
   "languagesByRepo": {
-    "ShawnXxy": {},
-    "shawnxxy.github.io": {},
-    "DevLore": {
-      "PHP": 22820,
-      "PowerShell": 15241,
-      "Python": 14375,
-      "Java": 9039,
-      "C#": 4657,
-      "Shell": 3609,
-      "Go": 3501,
-      "Perl": 666
+    "shawnxxy.github.io": {
+      "JavaScript": 61439,
+      "CSS": 31095,
+      "HTML": 12794,
+      "PowerShell": 7121
     },
+    "ShawnXxy": {},
     "KBMiner": {
       "Python": 42023
     },
     "PDFCraft": {
       "Python": 47763
     },
-    "BrainBits": {
-      "Java": 21931
-    },
-    "OrcasCopilot": {
-      "Python": 3635962,
-      "C#": 1142656,
-      "JavaScript": 72268,
-      "PowerShell": 64340,
-      "Jupyter Notebook": 56422,
-      "CSS": 17137,
-      "HTML": 11791,
-      "Jinja": 1501,
-      "Dockerfile": 1194,
-      "Shell": 771,
-      "Makefile": 173
-    },
-    "OrcasGPT": {
-      "C#": 21850,
-      "HTML": 19036
-    },
     "DocDown": {
       "Python": 18975
     },
-    "Scriptopia": {
-      "JavaScript": 1582063,
-      "HTML": 1421169,
-      "CSS": 1334614,
-      "Java": 323100,
-      "SCSS": 267678,
-      "PHP": 257666,
-      "Vue": 14541,
-      "Hack": 4206,
-      "Dockerfile": 317,
-      "FreeMarker": 100
-    },
     "AzMySQL-Connectivity-Checker": {
       "PowerShell": 98165
-    },
-    "AzMySQL-Perf-Checker": {
-      "PowerShell": 32705,
-      "C#": 31812
     },
     "AzMy-Metrics-Bin": {
       "C#": 32866
@@ -299,81 +118,43 @@
     "Flowlytics": {
       "PowerShell": 28890
     },
-    "CasePokemon": {
-      "C#": 6174
-    },
-    "OrcasHammer": {},
-    "Around": {
-      "Java": 115996
-    },
-    "Oops": {
-      "Java": 37745
-    },
-    "Algorithm": {
-      "Java": 100029
-    },
-    "vitaw": {
-      "HTML": 19036,
-      "C#": 11657
-    },
-    "Grafana-template-to-monitor-Azure-MySQL-Flexible": {},
-    "orcastitler": {
-      "JavaScript": 83638,
-      "HTML": 71119,
-      "CSS": 650
-    },
-    "Profile": {
-      "JavaScript": 325352,
-      "PHP": 234395,
-      "CSS": 34694,
-      "Hack": 1237
-    }
+    "Grafana-template-to-monitor-Azure-MySQL-Flexible": {}
   },
   "aggregatedLanguages": [
     {
+      "name": "PowerShell",
+      "bytes": 134176,
+      "percent": 35.204693399382364
+    },
+    {
       "name": "Python",
-      "bytes": 3759098,
-      "percent": 32.070616650094294
+      "bytes": 108761,
+      "percent": 28.536382503653602
     },
     {
       "name": "JavaScript",
-      "bytes": 2063321,
-      "percent": 17.603152888562416
-    },
-    {
-      "name": "HTML",
-      "bytes": 1542151,
-      "percent": 13.15680877102953
-    },
-    {
-      "name": "CSS",
-      "bytes": 1387095,
-      "percent": 11.833953784195716
+      "bytes": 61439,
+      "percent": 16.120179151000574
     },
     {
       "name": "C#",
-      "bytes": 1251672,
-      "percent": 10.678597068673609
+      "bytes": 32866,
+      "percent": 8.62328175876536
     },
     {
-      "name": "Java",
-      "bytes": 607840,
-      "percent": 5.18576627281154
+      "name": "CSS",
+      "bytes": 31095,
+      "percent": 8.1586121307372
     },
     {
-      "name": "PHP",
-      "bytes": 514881,
-      "percent": 4.39268972807232
-    },
-    {
-      "name": "SCSS",
-      "bytes": 267678,
-      "percent": 2.283685746863726
+      "name": "HTML",
+      "bytes": 12794,
+      "percent": 3.3568510564609024
     }
   ],
   "metadata": {
-    "totalRepositories": 23,
-    "totalBytes": 11721315,
+    "totalRepositories": 9,
+    "totalBytes": 381131,
     "generatedBy": "GitHub Language Data Generator",
     "version": "1.0.0"
   }

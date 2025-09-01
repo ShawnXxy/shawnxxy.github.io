@@ -11,11 +11,18 @@ require('dotenv').config();
 
 class LanguageDataGenerator {
     constructor() {
+        // Validate that we have a token
+        if (!process.env.git_token) {
+            throw new Error('GitHub token (git_token) is required but not found in environment variables');
+        }
+        
         this.octokit = new Octokit({
             auth: process.env.git_token
         });
         this.outputDir = path.join(__dirname, '../data');
         this.username = 'ShawnXxy';
+        
+        console.log(`🔑 Using GitHub API with token: ${process.env.git_token.substring(0, 8)}...`);
     }
 
     /**
@@ -59,7 +66,10 @@ class LanguageDataGenerator {
      */
     async fetchRepositories() {
         try {
-            const response = await this.octokit.request('GET /user/repos', {
+            // Use the public users API instead of the authenticated user API
+            // This works with the default GITHUB_TOKEN permissions
+            const response = await this.octokit.request('GET /users/{username}/repos', {
+                username: this.username,
                 type: 'owner',
                 sort: 'updated',
                 per_page: 100,
@@ -67,6 +77,8 @@ class LanguageDataGenerator {
                     'X-GitHub-Api-Version': '2022-11-28'
                 }
             });
+
+            console.log(`   API Rate Limit: ${response.headers['x-ratelimit-remaining']}/${response.headers['x-ratelimit-limit']}`);
 
             // Filter out forked repositories and include only relevant data
             return response.data
@@ -82,6 +94,11 @@ class LanguageDataGenerator {
                     stargazers_count: repo.stargazers_count
                 }));
         } catch (error) {
+            console.error('❌ API Error Details:', {
+                status: error.status,
+                message: error.message,
+                documentation_url: error.response?.data?.documentation_url
+            });
             throw new Error(`Failed to fetch repositories: ${error.message}`);
         }
     }

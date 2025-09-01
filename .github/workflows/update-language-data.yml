@@ -9,32 +9,113 @@ on:
 jobs:
   update-language-data:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
     
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
       
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: |
+        # Use root package.json if available, otherwise create temporary one
+        if [ -f package.json ]; then
+          npm ci
+        else
+          cd static/js
+          if [ ! -f package.json ]; then
+            echo '{"name": "language-data-generator", "version": "1.0.0", "type": "commonjs"}' > package.json
+          fi
+          npm install @octokit/core dotenv
+        fi
         
     - name: Generate language data
       env:
         git_token: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        cd static/js
-        npm install @octokit/core dotenv
-        node generate-language-data.js
+        # Use npm script if available, otherwise direct node command
+        if [ -f package.json ] && npm run | grep -q "build-languages"; then
+          npm run build-languages
+        else
+          cd static/js
+          node generate-language-data.js
+        fi
+      
+    - name: Check for changes
+      id: verify-changed-files
+      run: |
+        if [ -n "$(git status --porcelain static/data/)" ]; then
+          echo "changed=true" >> $GITHUB_OUTPUT
+          echo "files_changed=$(git status --porcelain static/data/ | wc -l)" >> $GITHUB_OUTPUT
+        else
+          echo "changed=false" >> $GITHUB_OUTPUT
+          echo "files_changed=0" >> $GITHUB_OUTPUT
+        fi
+      
+    - name: Display changes
+      if: steps.verify-changed-files.outputs.changed == 'true'
+      run: |
+        echo "📊 Language data changes detected:"
+        git status --porcelain static/data/
+        echo ""
+        echo "📈 File differences:"
+        git diff --stat static/data/
+        echo ""
+        echo "🔍 Detailed changes:"
+        git diff --name-only static/data/
       
     - name: Commit and push changes
+      if: steps.verify-changed-files.outputs.changed == 'true'
       run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
+        git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
         git add static/data/
-        if git diff --staged --quiet; then
-          echo "No changes to commit"
+        git commit -m "🤖 Update GitHub language data [automated]
+        
+        📊 Updated language statistics from GitHub API
+        📅 Generated on: $(date -u +'%Y-%m-%d %H:%M:%S UTC')
+        🔧 Files changed: ${{ steps.verify-changed-files.outputs.files_changed }}
+        🚀 Workflow: ${{ github.workflow }}
+        🆔 Run ID: ${{ github.run_id }}"
+        git push
+        
+    - name: Create job summary
+      run: |
+        echo "## 📊 GitHub Language Data Update" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Workflow:** ${{ github.workflow }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Timestamp:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ steps.verify-changed-files.outputs.changed }}" == "true" ]; then
+          echo "### ✅ Update Status: SUCCESS" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Files changed:** ${{ steps.verify-changed-files.outputs.files_changed }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📈 Changes Made:" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          git log -1 --stat --pretty="format:" static/data/ >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Files Updated:" >> $GITHUB_STEP_SUMMARY
+          git diff --name-only HEAD~1 static/data/ | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
         else
-          git commit -m "Update GitHub language data [automated]"
-          git push
+          echo "### ℹ️ Update Status: NO CHANGES" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Language data is already up to date. No changes were necessary." >> $GITHUB_STEP_SUMMARY
         fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "---" >> $GITHUB_STEP_SUMMARY
+        echo "*This update was performed automatically by GitHub Actions*" >> $GITHUB_STEP_SUMMARY

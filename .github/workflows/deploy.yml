@@ -1,0 +1,97 @@
+name: Build and Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'static/**'  # Don't trigger on static file changes
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Job for TypeScript build and deploy
+  build-typescript:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, '[typescript]') || contains(github.event.head_commit.message, '[ts]')
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Inject Azure Maps API Key
+      run: |
+        # Replace the placeholder in env-config.js with the actual API key for TypeScript build
+        if [ -f "src/js/env-config.js" ]; then
+          sed -i "s/\${AZURE_MAPS_SUBSCRIPTION_KEY}/${{ secrets.AZURE_MAPS_SUBSCRIPTION_KEY }}/g" src/js/env-config.js
+        fi
+        echo "Azure Maps API key injected for TypeScript build"
+      env:
+        AZURE_MAPS_SUBSCRIPTION_KEY: ${{ secrets.AZURE_MAPS_SUBSCRIPTION_KEY }}
+      
+    - name: Build TypeScript
+      run: npm run build
+      
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: './dist'
+        
+  # Job for static files deploy
+  deploy-static:
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.head_commit.message, '[typescript]') && !contains(github.event.head_commit.message, '[ts]') }}
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Inject Azure Maps API Key
+      run: |
+        # Replace the placeholder in env-config.js with the actual API key
+        sed -i "s/\${AZURE_MAPS_SUBSCRIPTION_KEY}/${{ secrets.AZURE_MAPS_SUBSCRIPTION_KEY }}/g" static/js/env-config.js
+        echo "Azure Maps API key injected successfully"
+      env:
+        AZURE_MAPS_SUBSCRIPTION_KEY: ${{ secrets.AZURE_MAPS_SUBSCRIPTION_KEY }}
+      
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      
+    - name: Upload static files
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: './static'
+        
+  # Unified deploy job
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: [build-typescript, deploy-static]
+    if: always() && (needs.build-typescript.result == 'success' || needs.deploy-static.result == 'success')
+    
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4

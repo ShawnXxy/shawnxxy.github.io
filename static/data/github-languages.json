@@ -1,0 +1,47 @@
+{
+  "lastUpdated": "2025-08-28T07:20:35.311Z",
+  "totalRepositories": 23,
+  "totalBytes": 11721315,
+  "languages": [
+    {
+      "name": "Python",
+      "percent": 32.07,
+      "bytes": 3759098
+    },
+    {
+      "name": "JavaScript",
+      "percent": 17.6,
+      "bytes": 2063321
+    },
+    {
+      "name": "HTML",
+      "percent": 13.16,
+      "bytes": 1542151
+    },
+    {
+      "name": "CSS",
+      "percent": 11.83,
+      "bytes": 1387095
+    },
+    {
+      "name": "C#",
+      "percent": 10.68,
+      "bytes": 1251672
+    },
+    {
+      "name": "Java",
+      "percent": 5.19,
+      "bytes": 607840
+    },
+    {
+      "name": "PHP",
+      "percent": 4.39,
+      "bytes": 514881
+    },
+    {
+      "name": "SCSS",
+      "percent": 2.28,
+      "bytes": 267678
+    }
+  ]
+}

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<!-- Ensures that IE and Edge uses the latest version and doesn't emulate an older version -->
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<!-- Ensures the web page looks good on all screen sizes. -->
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+	<title>Xiangyu Xiao | Personal vCard</title>
+	<meta name="description" content="Xiangyu Xiao is a Web developer/Software Engineer" />
+	<meta name="author" content="Xiangyu Xiao" />
+
+	<!-- favicon -->
+	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+	<link rel="icon" type="image/png" href="favicons/favicon-32x32.png" sizes="32x32">
+	<link rel="icon" type="image/png" href="favicons/favicon-16x16.png" sizes="16x16">
+	<link rel="manifest" href="/manifest.json">
+	<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+	<meta name="theme-color" content="#ffffff">
+
+	<!-- google font -->
+	<link href='https://fonts.googleapis.com/css?family=Raleway:400,700' rel='stylesheet' type='text/css' />
+
+	<!-- bootstrap css -->
+	<link rel="stylesheet" href="css/bootstrap.min.css" type="text/css" media="screen" />
+
+	<!-- font-awesome css -->
+	<!-- <link rel="stylesheet" href="css/font-awesome.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css" media="screen"/> -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+	<!-- animate.css -->
+	<link rel="stylesheet" href="css/animate.css" type="text/css" media="screen" />
+	<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css"> -->
+
+	<!-- custom css -->
+	<link rel="stylesheet" href="css/style.css" type="text/css" media="screen" />
+	<link rel="stylesheet" href="css/responsive.css" type="text/css" media="screen" />
+
+	<!-- Azure Map https://docs.microsoft.com/en-us/azure/azure-maps/how-to-use-map-control -->
+	<link rel="stylesheet" href="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.css" type="text/css">
+	<script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.js"></script>
+</head>
+
+<body>
+	<div class="preloader">
+		<div class="spinner">
+			<strong>Knocking<span id="puncsign">...</a><i class="fa-li fa fa-spinner fa-spin"></i></strong>
+		</div>
+	</div>
+	<div class="preloader-left"></div>
+	<div class="preloader-right"></div>
+
+	<div class="inline-menu-container hidex">
+		<ul class="inline-menu">
+			<li class="about menu-item">Profile</li>
+			<!-- <li class="portfolio menu-item">Portfolio</li> -->
+			<!-- <li class="blog menu-item">Blog</li> -->
+			<li class="contact menu-item">Contact</li>
+			<li id="close">&times;</li>
+			<!--exist button-->
+		</ul>
+	</div>
+
+	<section class="home">
+		<div class="container">
+			<div class="name-block">
+				<div class="name-block-container fadeIn animated">
+					<h1>
+						<span id="greetings" onload="callGreet()">Greetings</span> <a id="puncsign">!</a><br>
+						<span>I<a id="puncsign">'</a>m</span><br>
+						Xiangyu Xiao<a id="puncsign">.</a>
+					</h1>
+					<h2>Web Developer<span id="puncsign">/</span>Software Engineer</h2>
+					<a class="btn btn-resume" href="https://shawnxxy.github.io/animating-resume/dist/" target="_blank" rel="noopener">Animated Resume</a>
+					<a class="btn btn-download" href="/downloadable/Xiangyu (Shawn) Xiao Resume.pdf" target="_blank">Download</a>
+					<ul class="social">
+						<li><a href="https://github.com/ShawnXxy" target="_blank" rel="noopener" title="Visit my GitHub profile"><i class="fa fa-github"></i></a></li>
+						<li><a href="https://www.linkedin.com/in/shawnxxy" target="_blank" rel="noopener" title="Visit my LinkedIn profile"><i class="fa fa-linkedin"></i></a></li>
+						<li><a href="images/weixin.jpg" target="_blank" rel="noopener" title="View my WeChat QR code"><i class="fa fa-weixin"></i></a></li>
+						<li><a href="https://www.instagram.com/x_xiao2_bnu/" target="_blank" rel="noopener" title="Visit my Instagram profile"><i class="fa fa-instagram"></i></a></li>
+					</ul>
+				</div>
+				<!--end of container-->
+			</div>
+			<!--end of name block-->
+
+			<div class="menu-blocks">
+				<div class="about-block">
+					<div class="about-block-container">
+						<h2 class="about menu-item fadeInUp animated">Profile</h2>
+					</div>
+				</div>
+
+				<div class="portfolio-block">
+					<div class="portfolio-block-container">
+						<!-- <h2 class="portfolio menu-item">Portfolio</h2> -->
+					</div>
+				</div>
+				
+				<div class="blog-block">
+					<div class="blog-block-container">
+						<!-- <h2 class="blog menu-item">Blog</h2> -->
+					</div>
+				</div>
+				<div class="contact-block">
+					<div class="contact-block-container">
+						<h2 class="contact menu-item fadeInUp animated">Contact</h2>
+					</div>
+				</div>
+
+			</div>
+			<!--end of menu-block-->
+
+			<div class="content-blocks about hidex">
+				<section class="content" id="about">
+					<div class="block-content">
+						<h3 class="block-title animated fadeInUp">Who am I <span class="punctuation-highlight">?</span></h3>
+						<div class="row">
+							<div class="col-md-7 animated fadeInUp" id="who-am-i-content">
+								<!-- Content will be dynamically loaded -->
+							</div>
+							<div class="col-md-5">
+								<ul class="info-list" id="personal-info-content">
+									<!-- Content will be dynamically loaded -->
+								</ul>
+							</div> <!-- end of col-md-5-->
+						</div>
+						<!--end of row-->
+					</div>
+					<!--end of block-content-->
+
+					<div class="block-content ">
+						<h3 class="block-title">My Spellbook Usage (Per GitHub)</h3>
+						<div class="row">
+							<div class="col-sm-6">
+								<div id="technical-skills">
+									<!-- Skills will be dynamically loaded from GitHub API -->
+									<div class="loading-message">
+										<i class="fa fa-spinner fa-spin"></i> Loading skills from GitHub...
+									</div>
+								</div>
+							</div>
+							<!--end of col-sm-6-->
+							<div class="col-sm-6">
+								<h4>Know<span class="punctuation-highlight">–</span>how</h4>
+								<div class="row">
+									<div class="col-sm-6">
+										<ul class="icon-list" id="knowhow-left">
+											<!-- Content will be dynamically loaded -->
+										</ul>
+									</div>
+									<div class="col-sm-6">
+										<ul class="icon-list" id="knowhow-right">
+											<!-- Content will be dynamically loaded -->
+										</ul>
+									</div>
+									<!--end of col-sm-6-->
+								</div>
+								<!--end of row-->
+							</div>
+							<!--end of col-sm-6-->
+						</div>
+						<!--end of row-->
+					</div>
+					<!--end of block-content-->
+
+					<div class="block-content">
+						<h3 class="block-title">My Showcase</h3>
+						<div class="timeline proj">
+							<div class="row ">
+								<div class="col-md-12">
+									<div class="exp-holder" id="showcase-content">
+										<!-- Content will be dynamically loaded -->
+									</div>
+									<!--end of exp-holder-->
+								</div>
+								<!--end of col-md-12-->
+							</div>
+							<!--end of row-->
+						</div>
+						<!--end of timeline experience-->
+					</div>
+					<!--end of block-content-->
+
+					<div class="block-content">
+						<h3 class="block-title">My Footprint</h3>
+						<div class="timeline experience">
+							<div class="row ">
+								<div class="col-md-12">
+									<div class="exp-holder" id="experience-content">
+										<!-- Content will be dynamically loaded -->
+									</div>
+									<!--end of exp-holder-->
+								</div>
+								<!--end of col-md-12-->
+							</div>
+							<!--end of row-->
+						</div>
+						<!--end of timeline experience-->
+					</div>
+					<!--end of block-content-->
+
+					<div class="block-content">
+						<h3 class="block-title">Hogwarts</h3>
+						<div class="timeline education">
+							<div class="row">
+								<div class="col-md-12">
+									<div class="exp-holder" id="education-content">
+										<!-- Content will be dynamically loaded -->
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="block-content">
+						<div class="row text-center">
+							<div class="col-md-12 btn-email">
+								<a class="btn lowercase" href="mailto:shawnxxy@hotmail.com" target="_blank">shawnxxy@hotmail.com</a><br />
+							</div>
+						</div>
+					</div>
+				</section>
+			</div>
+
+			
+			<!-- Blog block -->
+			<!-- <div class="content-blocks blog hidex">
+
+				<section class="content">
+					<div class="block-content">
+						<h3 class="block-title">My Blog</h3>
+						<div class="col-md-10 col-md-offset-1">
+							<?php
+							$sql = "SELECT * FROM $table_posts where post_type = 1 and post_author = 'x_xiao2_bnu' ORDER BY post_date DESC;";
+							$query = mysqli_query($con, $sql);
+
+							while ($row = mysqli_fetch_assoc($query)) {
+								$post_id = $row['post_id'];
+								$post_title = mysqli_real_escape_string($con, $row['post_title']);
+								$post_author = mysqli_real_escape_string($con, $row['post_author']);
+								$post_date = $row['post_date'];
+								$post_img = $row['post_img'];
+								$post_content = substr(mysqli_real_escape_string($con, $row['post_content']), 0, 200) . "   ...   ...";
+							?>
+								<div class="post">
+									<div class="post-thumbnail">
+										<a href="shareboard/post.php?post_id=<?php echo $post_id; ?>" target="_blank">
+											<img lazyload='on' src="shareboard/images/<?php echo $post_img; ?>" alt="">
+										</a>
+									</div>
+									<div class="post-title">
+										<a href="shareboard/post.php?post_id=<?php echo $post_id; ?>" target="_blank">
+											<h2><?php echo $post_title; ?></h2>
+										</a>
+										<p class="post-info">
+											<span class="post-date"><?php echo $post_date; ?></span>
+										</p>
+									</div>
+									<div class="post-body">
+										<p><?php echo $post_content; ?></p>
+										<a class="btn" href="shareboard/post.php?post_id=<?php echo $post_id; ?>" target="_blank">Read More</a>
+									</div>
+								</div>
+							<?php
+							}
+							?>
+						</div>
+					</div>
+			</div> -->
+	</section>
+	</div>
+
+	<div class="content-blocks contact hidex">
+		<section class="content">
+			<div class="block-content">
+				<h3 class="block-title">Get in touch</h3>
+				<div class="row">
+					<div class="col-md-6">
+						<div class="contact-content ">
+							<div class="contact-icon">
+								<i class="fa fa-map-marker"></i>
+							</div>
+							<div class="contact-details">
+								<!-- <h5>Address</h5> -->
+								<h5>Location</h5>
+								<!--The div element for the map -->
+								<div class="map-box">
+									<div class="map" id="map"></div>
+								</div>
+
+							</div>
+						</div>
+						<div class="contact-content ">
+							<div class="contact-icon">
+								<i class="fa fa-phone"></i>
+							</div>
+							<div class="contact-details">
+								<h5>Call Me</h5>
+								<p> +86 - 17317158354</p>
+							</div>
+						</div>
+						<div class="contact-content ">
+							<div class="contact-icon">
+								<i class="fa fa-envelope"></i>
+							</div>
+							<div class="contact-details">
+								<h5>Enquiries</h5>
+								<p><a href="mailto:shawnxxy@hotmail.com">shawnxxy@hotmail.com</a></p>
+							</div>
+						</div>
+					</div>
+					
+				</div>
+			</div>
+		</section>
+	</div>
+	</div>
+	</section>
+
+	<footer>
+		<p>&copy; Xiangyu Xiao 2016 - <script>document.write(new Date().getFullYear());</script></p>
+	</footer>
+
+	<!-- jQuery -->
+	<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script> -->
+	<!-- <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script> -->
+	<script type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
+	<!-- isotope lib for filter data -->
+	<script type="text/javascript" src="js/jquery.isotope.min.js"></script>
+	<script type="text/javascript" src="js/jquery.placeholder.min.js"></script>
+	<!-- bootstrap  -->
+	<script type="text/javascript" src="js/bootstrap.min.js"></script>
+	<!-- smooth-scroll lib -->
+	<script type="text/javascript" src="js/smooth-scroll.js"></script>
+
+	<!-- custom js -->
+	<script type="text/javascript" src="js/custom.js"></script>
+	<script type="text/javascript" src="js/main.js"></script>
+	<!--contact_me-->
+	<script type="text/javascript" src="js/contact_me.js"></script>
+	<!-- GitHub Skills Integration -->
+	<script type="text/javascript" src="js/github-skills.js"></script>
+	<!-- Content Management System -->
+	<script type="text/javascript" src="js/content-manager.js"></script>
+	<!-- Environment Configuration -->
+	<script type="text/javascript" src="js/env-config.js"></script>
+	<!-- Azure Maps Configuration and Integration -->
+	<script type="text/javascript" src="js/azure-maps-config.js"></script>
+	<script type="text/javascript" src="js/azure-maps.js"></script>
+
+</body>
+
+</html>

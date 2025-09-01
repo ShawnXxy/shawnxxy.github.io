@@ -1,0 +1,162 @@
+{
+  "sections": {
+    "whoAmI": {
+      "title": "Who am I ?",
+      "content": [
+        "Self-motivated team player and Knowledge seeking professional;",
+        "Experienced in mutliple programing languages like C-Sharp, Python, Shell, JavaScript, Java, PHP, HTML/CSS;",
+        "Familiar with both frontend and backend development,  Azure envrionment, RDBMS like MySQL;",
+        "Able to negotiate and problem solve quickly, accurately, and efficiently;",
+        "Adept at multitasking to achieve individual and team goals;"
+      ]
+    },
+    "personalInfo": {
+      "legalName": "Xiangyu Xiao",
+      "preferredName": "Shawn",
+      "dateOfBirth": "August, 1988",
+      "email": "shawnxxy@hotmail.com",
+      "phones": [
+        "+1 909.529.4852",
+        "+86 173.171.58354"
+      ]
+    },
+    "knowHow": [
+      "LAMP",
+      "MEAN", 
+      "Cloud Computing",
+      "LLM",
+      "REST",
+      "Azure",
+      "Git",
+      "MySQL"
+    ],
+    "showcase": [
+      {
+        "title": "Azure Powershell",
+        "url": "https://github.com/Azure/azure-powershell",
+        "description": "PowerShell cmdlets for developers and administrators to develop, deploy, administer, and manage Microsoft Azure resources",
+        "details": [
+          "Contributed as a committer to the open-source Azure Powershell Az.Mysql and Az.Postgres module"
+        ]
+      },
+      {
+        "title": "AzMy-Metrics-Bin",
+        "url": "https://github.com/ShawnXxy/AzMy-Metrics-Bin",
+        "description": "a tool to emit MySQL status/metrics into Azure Log Analytics Workspace to help Azure DB for MySQL Single Server users monitor MySQL running state",
+        "details": [
+          "It is a console application which will ask for the input of the connection string for MySQL, (Log Workspace) custom ID and Shared key;",
+          "Run the ingestion code side by side in a VM that is allowed to connected to the target MySQL. The ingestion sample code will query the MySQL information_schema.global_status metrics and then post the data to the Logical Workspace in a regular 30-sec interval;",
+          "Data stored in Azure Log Analytics and data retention can be controlled based on preference."
+        ]
+      },
+      {
+        "title": "AzMySQL-Connectivity-Checker",
+        "url": "https://github.com/ShawnXxy/AzMySQL-Connectivity-Checker",
+        "description": "a tool to test connectivity for Azure DB for MySQL Single Server users to quickly diagnostic and narrow down connectivity issue",
+        "details": [
+          "Diagnose and troubleshoot connectivity issues between a local machine and Azure Database for MySQL;",
+          "Provide actionable guidance when connection attempts fail;",
+          "Supports optional network trace collection (requires admin privileges)."
+        ]
+      },
+      {
+        "title": "readmeX",
+        "url": "https://github.com/aibox22/readmeX",
+        "description": "AI-Powered README Generator: Automatically creates beautiful READMEs and interactive wikis for any repository",
+        "details": [
+          "Integrates with GitHub repositories to fetch relevant information;",
+          "Utilizes natural language processing to generate human-like text;",
+          "Supports customization and templates for different project types."
+        ]
+      },
+      {
+        "title": "deepwiki-open",
+        "url": "https://github.com/AsyncFuncAI/deepwiki-open",
+        "description": "implementation attempt of DeepWiki, automatically creates beautiful, interactive wikis for any GitHub, GitLab, or BitBucket repository",
+        "details": [
+          "Instant Documentation: Turn any GitHub, GitLab or BitBucket repo into a wiki in seconds;",
+          "Private Repository Support: Securely access private repositories with personal access tokens;",
+          "Smart Analysis: AI-powered understanding of code structure and relationships;",
+          "Beautiful Diagrams: Automatic Mermaid diagrams to visualize architecture and data flow;",
+          "Easy Navigation: Simple, intuitive interface to explore the wiki;",
+          "Ask Feature: Chat with your repository using RAG-powered AI to get accurate answers;",
+          "DeepResearch: Multi-turn research process that thoroughly investigates complex topics;",
+          "Multiple Model Providers: Support for Google Gemini, OpenAI, OpenRouter, and local Ollama models."
+        ]
+      }
+    ],
+    "experience": [
+      {
+        "title": "Sr. Escalation Engineer (FTE) – Azure DB for MySQL, Microsoft",
+        "period": "July 2024 - Current",
+        "details": [
+          "Developed troubleshooting dashboard using Azure Data Explorer to visually display critical log messages, timelined metrics trend, and all needed information that can be used to quickly define, locate, narrow down the MySQL issue along with mitigation steps and TSG/Wiki links in case of need to proceed further;",
+          "Developed AI-based tool, named OrcasCopilot, to automatically answer questions posted in Teams Supportability Channel using existing TSGs/Wiki and resolved incidents;"
+        ]
+      },
+      {
+        "title": "Support Escalation Engineer (FTE) – Azure OSS DB, Microsoft",
+        "period": "November 2020 - June 2024",
+        "details": [
+          "Awarded as Azure Database for MySQL - Emerald Contributor for hosting weekly triage to diagnostic complex MySQL issue reported globally and managing internal Supportability Channel on Teams to swarm with 700+ active internal engineers/partners on complex MySQL issues (Average 10 threads posted on daily basis);",
+          "Maintained and contributed official public document for Azure DB MySQL;",
+          "Handled escalating requests for issue troubleshooting and official RCA draft for external users;",
+          "Designed escalating and RCA request workflow to maintain healthy support ticket backlog;",
+          "Developed Teams Chatbot, CasePokemon, for internal use to monitor support tickets status on Teams to help internal users understand the most recent case state at soonest."
+        ]
+      },
+      {
+        "title": "Tech Support Engineer (FTE) – Azure OSS DB, Microsoft",
+        "period": "September 2019 - October 2020",
+        "details": [
+          "Served as the ONLY SME (Subject Matter Expert) in MySQL topic in APAC region (with 7 members in GCR, 11 in APJ, and 13 in IST);",
+          "Won CSS Team Impact Award Winner;",
+          "Conducted series of internal documents, TSGs, wikis, etc. and created advanced online technical content including Knowledge Base articles, training documents, blogs, etc. to help new members quickly onboard MySQL tech stack and join delivery;",
+          "Presented technical content to various audiences including partners, and internal stakeholders to help understand healthy status of global support tickets and the workflow how to proceed a support request at different stage."
+        ]
+      },
+      {
+        "title": "Tech Support Engineer (Contract) – Azure OSS DB, Microsoft",
+        "period": "July 2018 - September 2019",
+        "details": [
+          "Developed specialized expertise and solved complex technical issues in Microsoft Azure DB for MySQL and PostgreSQL (PaaS);",
+          "Used tools for debugging and root cause analysis. Reported product bugs and be an advocate for product improvement using customer suggestions;",
+          "Engaged and collaborated with other Microsoft groups, including escalation teams and the development team, in gaining resolution to critical, complex issue;",
+          "Participated in planned team-wide shift rotations to cover business needs, including 24x7 “On-Call” responsibilities and extended (morning/evening/weekend shift)."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "Master of Professional Study in Web Development",
+        "institution": "Fort Hays State University",
+        "institutionUrl": "http://www.fhsu.edu",
+        "period": "Aug 2016 - May 2018"
+      },
+      {
+        "degree": "Master of Business Administration",
+        "institution": "Fort Hays State University", 
+        "institutionUrl": "http://www.fhsu.edu",
+        "period": "Aug 2012 - Dec 2014"
+      },
+      {
+        "degree": "Bachelor of Business Administration",
+        "institution": "Fort Hays State University & Beijing Normal University Zhuhai Campus",
+        "institutionUrl": "http://www.fhsu.edu",
+        "institutionUrl2": "http://english.bnuz.edu.cn/",
+        "period": "Sept 2007 - May 2011"
+      }
+    ]
+  },
+  "styling": {
+    "firstLetterRule": {
+      "enabled": true,
+      "className": "first-letter"
+    },
+    "punctuationRule": {
+      "enabled": true,
+      "className": "punctuation-highlight",
+      "characters": ["+", ";", ",", ":", ".", "/", "-", "'", "!", "?", "&", "(", ")"]
+    }
+  }
+}

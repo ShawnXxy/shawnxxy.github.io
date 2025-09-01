@@ -54,15 +54,52 @@ function Start-StaticServer {
     # Check if Azure Maps key is loaded
     if ($env:AZURE_MAPS_SUBSCRIPTION_KEY) {
         Write-Host "🗝️  Azure Maps key loaded" -ForegroundColor Green
+        
+        # Inject environment variables into env-config.js for local development
+        Write-Host "🔧 Injecting environment variables for local development..." -ForegroundColor Yellow
+        
+        $envConfigPath = "static/js/env-config.js"
+        $envConfigBackup = "static/js/env-config.js.backup"
+        
+        # Create backup if it doesn't exist
+        if (!(Test-Path $envConfigBackup)) {
+            Copy-Item $envConfigPath $envConfigBackup
+            Write-Host "📋 Created backup of env-config.js" -ForegroundColor Gray
+        }
+        
+        # Replace placeholders in env-config.js with actual values from .env
+        $envConfigContent = Get-Content $envConfigPath -Raw
+        $envConfigContent = $envConfigContent -replace '\$\{AZURE_MAPS_SUBSCRIPTION_KEY\}', $env:AZURE_MAPS_SUBSCRIPTION_KEY
+        if ($env:git_token) {
+            $envConfigContent = $envConfigContent -replace '\$\{GITHUB_TOKEN\}', $env:git_token
+        }
+        Set-Content -Path $envConfigPath -Value $envConfigContent
+        
+        Write-Host "✅ Environment variables injected successfully" -ForegroundColor Green
     } else {
-        Write-Host "⚠️  Azure Maps key not found in environment" -ForegroundColor Yellow
+        Write-Host "⚠️  Azure Maps key not found in .env file" -ForegroundColor Yellow
+        Write-Host "   Add AZURE_MAPS_SUBSCRIPTION_KEY=your-key to .env file" -ForegroundColor Gray
     }
     
     Write-Host ""
     Write-Host "Press Ctrl+C to stop" -ForegroundColor Gray
     
-    Set-Location static
-    python -m http.server 8000
+    # Register cleanup for when Ctrl+C is pressed
+    try {
+        Set-Location static
+        python -m http.server 8000
+    } finally {
+        # Restore original env-config.js when server stops
+        Write-Host "`n🧹 Cleaning up..." -ForegroundColor Yellow
+        $envConfigPath = "static/js/env-config.js"
+        $envConfigBackup = "static/js/env-config.js.backup"
+        
+        if (Test-Path $envConfigBackup) {
+            Copy-Item $envConfigBackup $envConfigPath -Force
+            Write-Host "✅ Restored original env-config.js" -ForegroundColor Green
+            Set-Location ..
+        }
+    }
 }
 
 function Start-TypeScriptDev {

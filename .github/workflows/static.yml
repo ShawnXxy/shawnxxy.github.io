@@ -32,12 +32,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       
-      - name: Inject Azure Maps Key
+      - name: Inject Environment Variables
         run: |
-          # Replace the placeholder with the actual key in env-config.js
+          # Replace placeholders with actual secrets in env-config.js
           sed -i "s|\${AZURE_MAPS_SUBSCRIPTION_KEY}|${{ secrets.AZURE_MAPS_SUBSCRIPTION_KEY }}|g" static/js/env-config.js
+          sed -i "s|\${GITHUB_TOKEN}|${{ secrets.GITHUB_TOKEN }}|g" static/js/env-config.js
+          echo "Environment variables injected successfully"
         env:
           AZURE_MAPS_SUBSCRIPTION_KEY: ${{ secrets.AZURE_MAPS_SUBSCRIPTION_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Setup Pages
         uses: actions/configure-pages@v5

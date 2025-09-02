@@ -6,7 +6,7 @@
 
 class GitHubSkills {
     constructor() {
-        this.dataUrl = '../data/github-languages.json'; // Static JSON file
+        this.dataUrl = './data/github-languages.json'; // Static JSON file
         this.skillsContainer = document.getElementById('technical-skills');
         this.maxSkills = 8; // Limit to top 8 skills for display
         this.minPercent = 1; // Filter out skills with less than 1% usage
@@ -173,8 +173,10 @@ class GitHubSkills {
             this.animateProgressBars();
         }, 300);
 
-        // Save data as JSON for debugging/reference
-        this.saveLanguageData(skills);
+        // Only save data for debugging when we have raw data (not when loading static files)
+        if (this.languageData) {
+            this.saveLanguageData(skills);
+        }
     }
 
     /**
@@ -219,9 +221,9 @@ class GitHubSkills {
     saveLanguageData(skills) {
         const dataToSave = {
             lastUpdated: new Date().toISOString(),
-            totalRepositories: Object.keys(this.languageData).length,
+            totalRepositories: this.languageData ? Object.keys(this.languageData).length : 'unknown',
             languages: skills,
-            rawData: this.languageData
+            rawData: this.languageData || null
         };
         
         console.log('GitHub Language Data:', dataToSave);

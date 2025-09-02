@@ -75,6 +75,13 @@ function Start-StaticServer {
         }
         Set-Content -Path $envConfigPath -Value $envConfigContent
         
+        # Also create a .env file in static/ directory for direct Python server compatibility
+        $staticEnvContent = "AZURE_MAPS_SUBSCRIPTION_KEY=$($env:AZURE_MAPS_SUBSCRIPTION_KEY)"
+        if ($env:git_token) {
+            $staticEnvContent += "`ngit_token=$($env:git_token)"
+        }
+        Set-Content -Path "static/.env" -Value $staticEnvContent
+        
         Write-Host "✅ Environment variables injected successfully" -ForegroundColor Green
     } else {
         Write-Host "⚠️  Azure Maps key not found in .env file" -ForegroundColor Yellow
@@ -97,8 +104,15 @@ function Start-StaticServer {
         if (Test-Path $envConfigBackup) {
             Copy-Item $envConfigBackup $envConfigPath -Force
             Write-Host "✅ Restored original env-config.js" -ForegroundColor Green
-            Set-Location ..
         }
+        
+        # Remove static/.env file
+        if (Test-Path "static/.env") {
+            Remove-Item "static/.env" -Force
+            Write-Host "✅ Removed static/.env file" -ForegroundColor Green
+        }
+        
+        Set-Location ..
     }
 }
 

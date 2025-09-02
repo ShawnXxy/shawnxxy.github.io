@@ -45,22 +45,48 @@ class AzureMapsIntegration {
      * Load API key from various sources with fallback chain
      */
     async loadApiKey() {
+        // Wait for environment configuration to be loaded (for direct Python server usage)
+        await this.waitForEnvConfig();
+        
         // Try different sources in priority order
         this.subscriptionKey = 
             this.getFromEnvConfig() ||
-            this.getFromLocalStorage() ||
-            this.getFromDataAttribute() ||
-            await this.getFromLocalEnv();
+            this.getFromDataAttribute();
 
         if (!this.subscriptionKey) {
             const errorMsg = this.isLocalDevelopment() 
-                ? 'Azure Maps key not found. For local development, add AZURE_MAPS_SUBSCRIPTION_KEY to your .env file or set localStorage'
-                : 'Azure Maps key not found. Ensure GitHub Secret AZURE_MAPS_SUBSCRIPTION_KEY is configured';
+                ? 'Azure Maps key not found. Local development options: 1) Use dev.ps1 script, or 2) Add AZURE_MAPS_SUBSCRIPTION_KEY to .env file and run python directly'
+                : 'Azure Maps key not found. Ensure GitHub Secret AZURE_MAPS_SUBSCRIPTION_KEY is configured and GitHub Actions workflow is running';
             
             throw new Error(errorMsg);
         }
 
         console.log(`🔑 Azure Maps key loaded (${this.subscriptionKey.substring(0, 8)}...)`);
+    }
+
+    /**
+     * Wait for environment configuration to be loaded (max 5 seconds)
+     */
+    async waitForEnvConfig() {
+        const maxWaitTime = 5000; // 5 seconds
+        const checkInterval = 100; // 100ms
+        let waitTime = 0;
+
+        while (waitTime < maxWaitTime) {
+            // Check if env config is available and has a valid key
+            if (window.ENV_CONFIG && 
+                window.ENV_CONFIG.AZURE_MAPS_SUBSCRIPTION_KEY && 
+                !window.ENV_CONFIG.AZURE_MAPS_SUBSCRIPTION_KEY.startsWith('${')) {
+                console.log('🔄 Environment configuration loaded');
+                return;
+            }
+
+            // Wait a bit before checking again
+            await new Promise(resolve => setTimeout(resolve, checkInterval));
+            waitTime += checkInterval;
+        }
+
+        console.log('⏱️ Environment configuration wait timeout (this is normal for dev.ps1 usage)');
     }
 
     /**
@@ -71,20 +97,6 @@ class AzureMapsIntegration {
             const key = window.ENV_CONFIG.AZURE_MAPS_SUBSCRIPTION_KEY;
             if (key && !key.startsWith('${') && key !== 'undefined' && key.trim() !== '') {
                 console.log('📝 Using Azure Maps key from ENV_CONFIG');
-                return key;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Get key from localStorage (local development)
-     */
-    getFromLocalStorage() {
-        if (this.isLocalDevelopment()) {
-            const key = localStorage.getItem('AZURE_MAPS_DEV_KEY');
-            if (key && key.trim() !== '') {
-                console.log('💾 Using Azure Maps key from localStorage');
                 return key;
             }
         }
@@ -103,36 +115,6 @@ class AzureMapsIntegration {
                 return key;
             }
         }
-        return null;
-    }
-
-    /**
-     * Try to get key from local .env via a simple fetch (for development server that supports it)
-     */
-    async getFromLocalEnv() {
-        if (!this.isLocalDevelopment()) {
-            return null;
-        }
-
-        try {
-            // Try to fetch from a local endpoint that might serve env vars
-            const response = await fetch('/api/env/AZURE_MAPS_SUBSCRIPTION_KEY', {
-                method: 'GET',
-                headers: { 'Accept': 'text/plain' }
-            });
-            
-            if (response.ok) {
-                const key = await response.text();
-                if (key && key.trim() !== '') {
-                    console.log('🌐 Using Azure Maps key from local env endpoint');
-                    return key.trim();
-                }
-            }
-        } catch (error) {
-            // Local env endpoint not available, that's fine
-            console.log('🔍 Local env endpoint not available, using fallback methods');
-        }
-        
         return null;
     }
 
@@ -270,17 +252,6 @@ class AzureMapsIntegration {
             console.log('❌ ENV_CONFIG not found - env-config.js may not be loaded');
         }
         
-        // Check localStorage for local development
-        if (isLocal) {
-            const localKey = localStorage.getItem('AZURE_MAPS_DEV_KEY');
-            if (localKey) {
-                console.log('✅ Local development key found in localStorage');
-            } else {
-                console.log('❌ No local development key in localStorage');
-                console.log('   Run: localStorage.setItem("AZURE_MAPS_DEV_KEY", "your-key-here")');
-            }
-        }
-        
         // Test current instance
         if (this.initialized) {
             console.log('✅ Azure Maps Integration initialized successfully');
@@ -296,8 +267,8 @@ class AzureMapsIntegration {
             // Provide specific guidance
             if (isLocal) {
                 console.log('💡 For local development:');
-                console.log('   1. Add AZURE_MAPS_SUBSCRIPTION_KEY to your .env file, OR');
-                console.log('   2. Set localStorage: localStorage.setItem("AZURE_MAPS_DEV_KEY", "your-key")');
+                console.log('   1. Add AZURE_MAPS_SUBSCRIPTION_KEY to your .env file');
+                console.log('   2. Run: .\\dev.ps1 static (or run python server with .env in static/)');
                 console.log('   3. Refresh the page');
             } else {
                 console.log('💡 For production:');

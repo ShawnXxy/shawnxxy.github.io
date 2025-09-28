@@ -1,36 +1,36 @@
 {
-  "lastUpdated": "2025-09-21T01:05:10.657Z",
+  "lastUpdated": "2025-09-28T01:06:04.144Z",
   "totalRepositories": 9,
-  "totalBytes": 384742,
+  "totalBytes": 416722,
   "languages": [
     {
+      "name": "Python",
+      "percent": 33.77,
+      "bytes": 140741
+    },
+    {
       "name": "PowerShell",
-      "percent": 35.03,
+      "percent": 32.34,
       "bytes": 134762
     },
     {
-      "name": "Python",
-      "percent": 28.27,
-      "bytes": 108761
-    },
-    {
       "name": "JavaScript",
-      "percent": 16.77,
+      "percent": 15.48,
       "bytes": 64524
     },
     {
       "name": "C#",
-      "percent": 8.54,
+      "percent": 7.89,
       "bytes": 32866
     },
     {
       "name": "CSS",
-      "percent": 8.08,
+      "percent": 7.46,
       "bytes": 31095
     },
     {
       "name": "HTML",
-      "percent": 3.31,
+      "percent": 3.06,
       "bytes": 12734
     }
   ]

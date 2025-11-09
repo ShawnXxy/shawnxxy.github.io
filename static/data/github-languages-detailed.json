@@ -1,24 +1,14 @@
 {
-  "lastUpdated": "2025-11-02T01:07:18.687Z",
+  "lastUpdated": "2025-11-09T01:07:07.252Z",
   "repositories": [
     {
       "name": "ShawnXxy",
       "full_name": "ShawnXxy/ShawnXxy",
       "description": null,
       "language": null,
-      "updated_at": "2025-11-01T23:19:57Z",
+      "updated_at": "2025-11-08T23:19:48Z",
       "created_at": "2024-10-06T11:28:28Z",
-      "size": 11564,
-      "stargazers_count": 0
-    },
-    {
-      "name": "shawnxxy.github.io",
-      "full_name": "ShawnXxy/shawnxxy.github.io",
-      "description": null,
-      "language": "JavaScript",
-      "updated_at": "2025-10-26T01:06:52Z",
-      "created_at": "2025-08-26T03:17:52Z",
-      "size": 18844,
+      "size": 11825,
       "stargazers_count": 0
     },
     {
@@ -26,10 +16,20 @@
       "full_name": "ShawnXxy/KBMiner",
       "description": null,
       "language": "Python",
-      "updated_at": "2025-09-23T12:25:00Z",
+      "updated_at": "2025-11-07T05:54:29Z",
       "created_at": "2025-07-16T12:59:24Z",
-      "size": 396538,
+      "size": 396543,
       "stargazers_count": 1
+    },
+    {
+      "name": "shawnxxy.github.io",
+      "full_name": "ShawnXxy/shawnxxy.github.io",
+      "description": null,
+      "language": "JavaScript",
+      "updated_at": "2025-11-02T01:07:22Z",
+      "created_at": "2025-08-26T03:17:52Z",
+      "size": 18841,
+      "stargazers_count": 0
     },
     {
       "name": "PDFCraft",
@@ -94,14 +94,14 @@
   ],
   "languagesByRepo": {
     "ShawnXxy": {},
+    "KBMiner": {
+      "Python": 74016
+    },
     "shawnxxy.github.io": {
       "JavaScript": 64524,
       "CSS": 31095,
       "HTML": 12734,
       "PowerShell": 7707
-    },
-    "KBMiner": {
-      "Python": 74003
     },
     "PDFCraft": {
       "Python": 47763
@@ -123,38 +123,38 @@
   "aggregatedLanguages": [
     {
       "name": "Python",
-      "bytes": 140741,
-      "percent": 33.773354898469485
+      "bytes": 140754,
+      "percent": 33.77542083098372
     },
     {
       "name": "PowerShell",
       "bytes": 134762,
-      "percent": 32.338585435854114
+      "percent": 32.33757663743146
     },
     {
       "name": "JavaScript",
       "bytes": 64524,
-      "percent": 15.483703764140122
+      "percent": 15.483220751796706
     },
     {
       "name": "C#",
       "bytes": 32866,
-      "percent": 7.886792633938213
+      "percent": 7.886546606356558
     },
     {
       "name": "CSS",
       "bytes": 31095,
-      "percent": 7.461809071755271
+      "percent": 7.461576301486557
     },
     {
       "name": "HTML",
       "bytes": 12734,
-      "percent": 3.055754195842792
+      "percent": 3.055658871945001
     }
   ],
   "metadata": {
     "totalRepositories": 9,
-    "totalBytes": 416722,
+    "totalBytes": 416735,
     "generatedBy": "GitHub Language Data Generator",
     "version": "1.0.0"
   }

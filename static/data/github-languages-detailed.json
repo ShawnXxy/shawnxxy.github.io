@@ -1,14 +1,24 @@
 {
-  "lastUpdated": "2026-08-09T01:07:29.362Z",
+  "lastUpdated": "2026-08-16T00:51:37.700Z",
   "repositories": [
     {
       "name": "ShawnXxy",
       "full_name": "ShawnXxy/ShawnXxy",
       "description": null,
       "language": null,
-      "updated_at": "2026-08-08T23:32:48Z",
+      "updated_at": "2026-08-15T23:23:35Z",
       "created_at": "2024-10-06T11:28:28Z",
-      "size": 17306,
+      "size": 17847,
+      "stargazers_count": 0
+    },
+    {
+      "name": "signal-prose",
+      "full_name": "ShawnXxy/signal-prose",
+      "description": "Developer prose from AI coding agents, minus the filler.",
+      "language": "JavaScript",
+      "updated_at": "2026-08-14T12:43:58Z",
+      "created_at": "2026-08-10T14:27:14Z",
+      "size": 155,
       "stargazers_count": 0
     },
     {
@@ -16,9 +26,9 @@
       "full_name": "ShawnXxy/shawnxxy.github.io",
       "description": null,
       "language": "JavaScript",
-      "updated_at": "2026-08-02T02:02:47Z",
+      "updated_at": "2026-08-09T01:07:34Z",
       "created_at": "2025-08-26T03:17:52Z",
-      "size": 18846,
+      "size": 18848,
       "stargazers_count": 0
     },
     {
@@ -94,6 +104,9 @@
   ],
   "languagesByRepo": {
     "ShawnXxy": {},
+    "signal-prose": {
+      "JavaScript": 119174
+    },
     "shawnxxy.github.io": {
       "JavaScript": 64524,
       "CSS": 31095,
@@ -122,39 +135,39 @@
   },
   "aggregatedLanguages": [
     {
+      "name": "JavaScript",
+      "bytes": 183698,
+      "percent": 34.27623550661089
+    },
+    {
       "name": "Python",
       "bytes": 140779,
-      "percent": 33.77939341587484
+      "percent": 26.26797329521919
     },
     {
       "name": "PowerShell",
       "bytes": 134762,
-      "percent": 32.33563681735291
-    },
-    {
-      "name": "JavaScript",
-      "bytes": 64524,
-      "percent": 15.482291966599481
+      "percent": 25.14526042385816
     },
     {
       "name": "C#",
       "bytes": 32866,
-      "percent": 7.886073519531625
+      "percent": 6.132471535674169
     },
     {
       "name": "CSS",
       "bytes": 31095,
-      "percent": 7.4611287071695935
+      "percent": 5.802020398034086
     },
     {
       "name": "HTML",
       "bytes": 12734,
-      "percent": 3.055475573471542
+      "percent": 2.376038840603507
     }
   ],
   "metadata": {
-    "totalRepositories": 9,
-    "totalBytes": 416760,
+    "totalRepositories": 10,
+    "totalBytes": 535934,
     "generatedBy": "GitHub Language Data Generator",
     "version": "1.0.0"
   }

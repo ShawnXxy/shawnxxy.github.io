@@ -9,12 +9,13 @@ In the repository's Settings:
 1. Under Pages, select GitHub Actions as the build and deployment source.
 2. Under Secrets and variables > Actions, add `AZURE_MAPS_SUBSCRIPTION_KEY` for the contact map.
 3. Check that the `github-pages` environment permits deployment from `main`.
-4. Configure the [showcase credentials](#showcase-credentials) before publishing.
+4. Configure the [showcase credentials](#showcase-credentials), keeping the app
+   private key only in the protected `showcase-data` environment.
 
 GitHub supplies `GITHUB_TOKEN` automatically; it does not need a manually created repository secret. The static artifact job declares `contents: read` and `pages: read`; the deployment job declares `pages: write` and `id-token: write`.
 
-Showcase collection uses a separate, explicitly configured `GIT_TOKEN` with
-cross-repository read access, not the automatic workflow token.
+Showcase collection uses a short-lived GitHub App installation token generated
+for each run, not a stored `GIT_TOKEN` or the automatic workflow token.
 
 During deployment, the workflow substitutes the Azure Maps key into `static\js\env-config.js`. Visitors can read this client-side key; storing it as a GitHub secret keeps it out of source control, not private after publication. Do not commit credentials or upload a local `.env` as site content.
 
@@ -29,6 +30,18 @@ Pull requests targeting `main` run `verify`, including the deployment-gate, Prof
 To check the deployment gate locally, run `node .github\tests\pages-deployment.test.js` from the repository root with Node.js installed.
 
 Every permitted deployment uses `deploy-static`; commit messages do not select a different build mode.
+
+To check app access without publishing, run the workflow from `main` with
+`check_app_access` enabled. After the offline checks pass, `verify-app-access`
+runs on a separate hosted runner and checks out that trusted workflow commit
+for collection. No branch workspace, cache, or artifacts are used by this job.
+Manual runs from other branches do not run credentialed checks or publishing.
+
+The access check does not call Copilot, write a showcase snapshot, upload a
+Pages artifact, or publish the site. Only repository names, counts, and the collection
+window are logged. Pull-request runs do not receive the app credentials or
+perform this live check. Leave `check_app_access` disabled for a normal manual
+deployment; pushes and scheduled runs retain their normal publishing behavior.
 
 ## Publish updated language statistics
 
@@ -118,16 +131,40 @@ or timed-out request displays the curated fallback with an explanatory status.
    personal access token with the **Copilot Requests** permission and access to
    your Copilot plan. AI requests use that account's allowance or billing.
    See [Copilot CLI authentication](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference#copilot-login-options).
-2. Set the required `GIT_TOKEN` repository secret to a personal access token or
-   GitHub App token authorized to read the public profile and all pinned or
-   contributed repositories used by the showcase. Include any required
-   organization authorization. There is no automatic workflow-token fallback;
-   API and SAML errors fail the refresh rather than implying no contributions.
-3. Configure GitHub Pages to use GitHub Actions, then run **Build and Deploy to
-   GitHub Pages** on `main`. Inspect a successful run and the generated showcase
-   before relying on unattended publication. Preflight requires both tokens
-   before installing dependencies or generating content. Missing credentials
-   block production deployment instead of silently skipping generation.
+2. Set the repository Actions variable `SHOWCASE_APP_CLIENT_ID` to the GitHub
+   App's Client ID. Create a `showcase-data` environment with **Selected branches
+   and tags** restricted to the `main` branch only, no required reviewers, and
+   administrator bypass disabled. Store the complete PEM private key as that
+   environment's `SHOWCASE_APP_PRIVATE_KEY` secret. Remove any repository-level
+   copy of the same secret after moving it; otherwise modified branch workflows
+   could still access that copy without the environment's protection.
+3. Install the app on the repository owner's account with Contents and Pull
+   requests permissions set to read-only. Obtain any required repository or
+   organization approval; registration alone does not prove access to the
+   collector's GraphQL and REST queries.
+4. Once this workflow is on `main`, manually run **Build and Deploy to GitHub
+   Pages** from `main` with `check_app_access` enabled. The isolated job uses
+   the trusted workflow commit to exercise pinned repositories, contribution
+   counts, merged PR search, README reads, and commit history without publishing
+   or using Copilot. Resolve access failures rather than treating them as no
+   activity. Do not dispatch an unreviewed branch to access the app key.
+5. Configure GitHub Pages to use GitHub Actions, then run the workflow on `main`
+   with `check_app_access` disabled to publish. Production preflight requires
+   the app variable, environment-held private key, and Copilot credential
+   before installation or generation. Missing configuration fails deployment
+   instead of silently skipping generation.
+
+The environment's branch restriction is enforced by GitHub before releasing
+its secret, independently of workflow YAML conditions. It does not require
+per-run human approval for `main`. Both app-key-consuming jobs reference this
+environment; the branch verification job does not.
+
+The workflow uses `actions/create-github-app-token@v3` to mint a token immediately
+before collection, with read-only Contents and Pull requests permissions.
+The token covers the owner's installation grants, expires after one hour, and
+is revoked by the action when the job ends. It is not saved as a repository
+secret or cached. `COPILOT_GITHUB_TOKEN` remains separate and retains its own
+expiration requirements. Protect and rotate the app private key as required.
 
 The workflow installs Copilot CLI `1.0.90` with Node.js 22. Its daily schedule is
 not a real-time guarantee; GitHub can delay runs or disable a public repository's

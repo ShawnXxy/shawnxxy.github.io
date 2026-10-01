@@ -5,7 +5,12 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch: # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      check_app_access:
+        description: Check GitHub App access only, without generating or publishing
+        type: boolean
+        default: false
   schedule:
     - cron: '17 3 * * *'
 
@@ -19,6 +24,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
     - uses: actions/checkout@v4
       with:
@@ -28,8 +34,64 @@ jobs:
         node-version: '22'
     - run: npm test
 
+  verify-app-access:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: showcase-data
+    permissions:
+      contents: read
+    timeout-minutes: 60
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main' &&
+      inputs.check_app_access
+    steps:
+    - name: Checkout trusted collector
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.sha }}
+        persist-credentials: false
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    - name: Create app token for access check
+      id: check-app-token
+      uses: actions/create-github-app-token@v3
+      with:
+        client-id: ${{ vars.SHOWCASE_APP_CLIENT_ID }}
+        private-key: ${{ secrets.SHOWCASE_APP_PRIVATE_KEY }}
+        owner: ${{ github.repository_owner }}
+        permission-contents: read
+        permission-pull-requests: read
+
+    - name: Verify GitHub App public data access
+      env:
+        GH_TOKEN: ${{ steps.check-app-token.outputs.token }}
+      run: |
+        node <<'NODE'
+        const { collectProjects } = require('./scripts/generate-showcase-data');
+        collectProjects().then(data => {
+          console.log(JSON.stringify({
+            windowStart: data.windowStart,
+            generatedAt: data.generatedAt,
+            projects: data.projects.map(project => ({
+              repository: project.title,
+              pinned: project.pinned,
+              commitCount: project.commitCount,
+              mergedPrCount: project.mergedPrCount,
+              sourceCount: project.evidence.sources.length
+            }))
+          }, null, 2));
+        }).catch(error => {
+          console.error(`GitHub App access check failed: ${error.message}`);
+          process.exitCode = 1;
+        });
+        NODE
+
   deploy-static:
     needs: verify
+    environment: showcase-data
     permissions:
       contents: read
       pages: read
@@ -37,7 +99,8 @@ jobs:
     timeout-minutes: 60
     if: >-
       github.ref == 'refs/heads/main' &&
-      (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') &&
+      (github.event_name != 'workflow_dispatch' || !inputs.check_app_access)
     
     steps:
     - name: Checkout
@@ -53,13 +116,15 @@ jobs:
 
     - name: Check showcase credentials
       env:
-        GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+        SHOWCASE_APP_CLIENT_ID: ${{ vars.SHOWCASE_APP_CLIENT_ID }}
+        SHOWCASE_APP_PRIVATE_KEY: ${{ secrets.SHOWCASE_APP_PRIVATE_KEY }}
         COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
       run: |
         node <<'NODE'
-        const missing = ['GIT_TOKEN', 'COPILOT_GITHUB_TOKEN'].filter(name => !process.env[name]);
+        const missing = ['SHOWCASE_APP_CLIENT_ID', 'SHOWCASE_APP_PRIVATE_KEY', 'COPILOT_GITHUB_TOKEN']
+          .filter(name => !process.env[name]);
         if (missing.length) {
-          console.error(`::error::Set repository secrets: ${missing.join(', ')}. GIT_TOKEN needs cross-repository read access; COPILOT_GITHUB_TOKEN needs Copilot Requests permission.`);
+          console.error(`::error::Missing showcase configuration: ${missing.join(', ')}. Set the app Client ID variable, the showcase-data environment's private-key secret, and the Copilot credential.`);
           process.exitCode = 1;
         }
         NODE
@@ -77,9 +142,19 @@ jobs:
         restore-keys: |
           showcase-v1-${{ runner.os }}-
 
+    - name: Create GitHub App token
+      id: showcase-app-token
+      uses: actions/create-github-app-token@v3
+      with:
+        client-id: ${{ vars.SHOWCASE_APP_CLIENT_ID }}
+        private-key: ${{ secrets.SHOWCASE_APP_PRIVATE_KEY }}
+        owner: ${{ github.repository_owner }}
+        permission-contents: read
+        permission-pull-requests: read
+
     - name: Generate public project and contribution summaries
       env:
-        GH_TOKEN: ${{ secrets.GIT_TOKEN }}
+        GH_TOKEN: ${{ steps.showcase-app-token.outputs.token }}
         COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
       run: npm run build-showcase
 
@@ -123,6 +198,7 @@ jobs:
     if: >-
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') &&
+      (github.event_name != 'workflow_dispatch' || !inputs.check_app_access) &&
       needs.deploy-static.result == 'success'
     
     steps:

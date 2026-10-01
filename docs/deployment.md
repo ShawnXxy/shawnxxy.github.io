@@ -13,8 +13,8 @@ In the repository's Settings:
 
 GitHub supplies `GITHUB_TOKEN` automatically; it does not need a manually created repository secret. The static artifact job declares `contents: read` and `pages: read`; the deployment job declares `pages: write` and `id-token: write`.
 
-Showcase collection uses a separate, explicitly configured `GIT_TOKEN` with
-cross-repository read access, not the automatic workflow token.
+Showcase collection uses a short-lived GitHub App installation token generated
+for each run, not a stored `GIT_TOKEN` or the automatic workflow token.
 
 During deployment, the workflow substitutes the Azure Maps key into `static\js\env-config.js`. Visitors can read this client-side key; storing it as a GitHub secret keeps it out of source control, not private after publication. Do not commit credentials or upload a local `.env` as site content.
 
@@ -29,6 +29,12 @@ Pull requests targeting `main` run `verify`, including the deployment-gate, Prof
 To check the deployment gate locally, run `node .github\tests\pages-deployment.test.js` from the repository root with Node.js installed.
 
 Every permitted deployment uses `deploy-static`; commit messages do not select a different build mode.
+
+Manually running this workflow on a non-`main` branch runs the offline checks and
+a read-only GitHub App collection check. It does not call Copilot, write a
+showcase snapshot, upload a Pages artifact, or deploy. Only repository names,
+counts, and the collection window are logged. Pull-request runs do not receive
+the app credentials or perform this live check.
 
 ## Publish updated language statistics
 
@@ -118,16 +124,28 @@ or timed-out request displays the curated fallback with an explanatory status.
    personal access token with the **Copilot Requests** permission and access to
    your Copilot plan. AI requests use that account's allowance or billing.
    See [Copilot CLI authentication](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference#copilot-login-options).
-2. Set the required `GIT_TOKEN` repository secret to a personal access token or
-   GitHub App token authorized to read the public profile and all pinned or
-   contributed repositories used by the showcase. Include any required
-   organization authorization. There is no automatic workflow-token fallback;
-   API and SAML errors fail the refresh rather than implying no contributions.
-3. Configure GitHub Pages to use GitHub Actions, then run **Build and Deploy to
-   GitHub Pages** on `main`. Inspect a successful run and the generated showcase
-   before relying on unattended publication. Preflight requires both tokens
-   before installing dependencies or generating content. Missing credentials
-   block production deployment instead of silently skipping generation.
+2. Set the repository Actions variable `SHOWCASE_APP_CLIENT_ID` to the GitHub
+   App's Client ID and the repository Actions secret `SHOWCASE_APP_PRIVATE_KEY`
+   to its complete PEM private key. Install the app on the repository owner's
+   account with Contents and Pull requests permissions set to read-only.
+   Obtain any required repository or organization approval; registration alone
+   does not prove access to the collector's GraphQL and REST queries.
+3. Before switching production credentials, manually run **Build and Deploy to
+   GitHub Pages** on the branch containing the app integration. The read-only
+   collection check exercises pinned repositories, contribution counts, merged
+   PR search, README reads, and commit history without publishing or using
+   Copilot. Resolve access failures rather than treating them as no activity.
+4. Configure GitHub Pages to use GitHub Actions, then run the workflow on `main`
+   after merging. Production preflight requires the app variable, app private
+   key, and Copilot credential before installation or generation. Missing
+   configuration fails deployment instead of silently skipping generation.
+
+The workflow uses `actions/create-github-app-token@v3` to mint a token immediately
+before collection, with read-only Contents and Pull requests permissions.
+The token covers the owner's installation grants, expires after one hour, and
+is revoked by the action when the job ends. It is not saved as a repository
+secret or cached. `COPILOT_GITHUB_TOKEN` remains separate and retains its own
+expiration requirements. Protect and rotate the app private key as required.
 
 The workflow installs Copilot CLI `1.0.90` with Node.js 22. Its daily schedule is
 not a real-time guarantee; GitHub can delay runs or disable a public repository's

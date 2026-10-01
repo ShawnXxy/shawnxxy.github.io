@@ -77,25 +77,78 @@ test('the static job allows a cold-cache refresh plus setup and artifact work', 
     assert.ok(minutes >= 60, 'Allow at least 60 minutes for nine three-minute summaries and the other job steps');
 });
 
-test('showcase credential preflight requires explicit data and Copilot tokens', () => {
+test('showcase preflight requires app credentials and keeps Copilot authentication separate', () => {
     const preflight = workflow.match(/    - name: Check (?:Copilot|showcase) credentials\r?\n([\s\S]*?)(?=\r?\n    - name:)/)?.[1];
     assert.ok(preflight, 'A credential preflight must precede generation');
-    assert.match(preflight, /GIT_TOKEN: \$\{\{ secrets\.GIT_TOKEN \}\}/);
+    assert.match(preflight, /SHOWCASE_APP_CLIENT_ID: \$\{\{ vars\.SHOWCASE_APP_CLIENT_ID \}\}/);
+    assert.match(preflight, /SHOWCASE_APP_PRIVATE_KEY: \$\{\{ secrets\.SHOWCASE_APP_PRIVATE_KEY \}\}/);
     assert.match(preflight, /COPILOT_GITHUB_TOKEN: \$\{\{ secrets\.COPILOT_GITHUB_TOKEN \}\}/);
-    assert.match(workflow, /GH_TOKEN: \$\{\{ secrets\.GIT_TOKEN \}\}/);
+    assert.doesNotMatch(workflow, /secrets\.GIT_TOKEN\b/);
+    assert.match(workflow, /GH_TOKEN: \$\{\{ steps\.showcase-app-token\.outputs\.token \}\}/);
     const script = preflight.match(/node <<'NODE'\r?\n([\s\S]*?)\r?\n        NODE/)?.[1];
     assert.ok(script, 'The preflight must have an executable credential check');
-    for (const env of [
-        {}, { GIT_TOKEN: 'data-test-token' }, { COPILOT_GITHUB_TOKEN: 'copilot-test-token' },
-        { GIT_TOKEN: '', COPILOT_GITHUB_TOKEN: 'copilot-test-token' },
-        { GIT_TOKEN: 'data-test-token', COPILOT_GITHUB_TOKEN: 'copilot-test-token' }
-    ]) {
-        const missing = ['GIT_TOKEN', 'COPILOT_GITHUB_TOKEN'].filter(name => !env[name]);
+    const credentials = {
+        SHOWCASE_APP_CLIENT_ID: 'client-test-value',
+        SHOWCASE_APP_PRIVATE_KEY: 'key-test-value',
+        COPILOT_GITHUB_TOKEN: 'copilot-test-value'
+    };
+    const environments = [{}, credentials, ...Object.keys(credentials).map(name => ({ ...credentials, [name]: '' }))];
+    for (const env of environments) {
+        const missing = Object.keys(credentials).filter(name => !env[name]);
         const process = { env, exitCode: 0 };
         const messages = [];
         runInNewContext(script, { process, console: { error: message => messages.push(message) } });
         assert.equal(process.exitCode, missing.length ? 1 : 0);
         for (const name of missing) assert.ok(messages.some(message => message.includes(name)));
-        assert.ok(messages.every(message => !message.includes('test-token')));
+        assert.ok(messages.every(message => !message.includes('test-value')));
     }
+});
+
+test('production mints a read-only app token immediately before collection', () => {
+    const staticJob = workflow.split(/^  deploy-static:\r?$/m)[1].split(/^  deploy:\r?$/m)[0];
+    const tokenStep = staticJob.match(/    - name: Create GitHub App token\r?\n([\s\S]*?)(?=\r?\n    - name:)/)?.[1];
+    assert.ok(tokenStep, 'The workflow must mint an installation token instead of storing one');
+    assert.match(tokenStep, /id: showcase-app-token/);
+    assert.match(tokenStep, /uses: actions\/create-github-app-token@v3/);
+    assert.match(tokenStep, /client-id: \$\{\{ vars\.SHOWCASE_APP_CLIENT_ID \}\}/);
+    assert.match(tokenStep, /private-key: \$\{\{ secrets\.SHOWCASE_APP_PRIVATE_KEY \}\}/);
+    assert.match(tokenStep, /owner: \$\{\{ github\.repository_owner \}\}/);
+    assert.match(tokenStep, /permission-contents: read/);
+    assert.match(tokenStep, /permission-pull-requests: read/);
+    assert.doesNotMatch(tokenStep, /permission-[\w-]+: write|skip-token-revoke/);
+    assert.ok(staticJob.indexOf('Restore the last generated showcase') < staticJob.indexOf('Create GitHub App token'));
+    assert.ok(staticJob.indexOf('Create GitHub App token') < staticJob.indexOf('Generate public project'));
+});
+
+test('live app-access verification is manual, non-main, read-only and never uses Copilot', () => {
+    const verifyJob = workflow.split(/^  verify:\r?$/m)[1].split(/^  deploy-static:\r?$/m)[0];
+    const diagnostics = [
+        verifyJob.match(/    - name: Create app token for access check\r?\n([\s\S]*?)(?=\r?\n    - name:)/)?.[1],
+        verifyJob.match(/    - name: Verify GitHub App public data access\r?\n([\s\S]*)/)?.[1]
+    ];
+    for (const step of diagnostics) {
+        assert.ok(step, 'Both token creation and collection must be gated');
+        const expression = step.match(/^      if: (.*(?:\r?\n {8}.+)*)/m)?.[1].replace(/^>-\s*/, '');
+        assert.ok(expression);
+        for (const [event, ref, expected] of [
+            ['workflow_dispatch', 'refs/heads/feature', true],
+            ['workflow_dispatch', 'refs/heads/main', false],
+            ['workflow_dispatch', 'refs/tags/test', false],
+            ['pull_request', 'refs/heads/feature', false],
+            ['pull_request', 'refs/pull/4/merge', false],
+            ['push', 'refs/heads/feature', false],
+            ['schedule', 'refs/heads/main', false]
+        ]) {
+            assert.equal(runInNewContext(expression, {
+                github: { event_name: event, ref },
+                startsWith: (value, prefix) => value.startsWith(prefix)
+            }), expected, `${event} ${ref}`);
+        }
+    }
+    assert.match(diagnostics[0], /uses: actions\/create-github-app-token@v3/);
+    assert.match(diagnostics[0], /permission-contents: read/);
+    assert.match(diagnostics[0], /permission-pull-requests: read/);
+    assert.match(diagnostics[1], /GH_TOKEN: \$\{\{ steps\.check-app-token\.outputs\.token \}\}/);
+    assert.match(diagnostics[1], /collectProjects\(\)/);
+    assert.doesNotMatch(verifyJob, /COPILOT_GITHUB_TOKEN|build-showcase|refreshShowcase|upload-pages-artifact|deploy-pages@/);
 });

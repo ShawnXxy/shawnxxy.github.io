@@ -335,6 +335,37 @@ test('does not turn API failures into empty public data', async t => {
     }
 });
 
+test('requires explicit data credentials instead of falling back to the workflow token', async t => {
+    let requests = 0;
+    t.mock.method(global, 'fetch', async () => {
+        requests += 1;
+        return new Response('{}');
+    });
+    const previous = {
+        GH_TOKEN: process.env.GH_TOKEN,
+        git_token: process.env.git_token,
+        GITHUB_TOKEN: process.env.GITHUB_TOKEN
+    };
+    delete process.env.GH_TOKEN;
+    delete process.env.git_token;
+    process.env.GITHUB_TOKEN = 'workflow-test-token';
+    try {
+        await assert.rejects(githubRequest('/repos/community/tools'), /Set GH_TOKEN \(or git_token\)/);
+        assert.equal(requests, 0);
+        for (const name of ['GH_TOKEN', 'git_token']) {
+            process.env[name] = 'explicit-data-test-token';
+            assert.deepEqual(await githubRequest('/repos/community/tools'), {});
+            delete process.env[name];
+        }
+        assert.equal(requests, 2);
+    } finally {
+        for (const [name, value] of Object.entries(previous)) {
+            if (value === undefined) delete process.env[name];
+            else process.env[name] = value;
+        }
+    }
+});
+
 test('reads unwrapped CLI JSON events and rejects tool use or failed runs', () => {
     const content = JSON.stringify({
         description: 'A command-line tool that converts Markdown documentation to HTML.',
@@ -382,6 +413,131 @@ test('browser loader distinguishes generated, pending, empty and invalid snapsho
     await manager.loadShowcaseData();
     assert.equal(manager.showcaseData, null);
     assert.match(manager.showcaseMessage, /unavailable/i);
+});
+
+function createShowcaseRenderer(snapshot) {
+    // ponytail: DOM operations only; use browser tests for layout or HTML parsing.
+    const createTextNode = value => ({ nodeType: 3, textContent: String(value) });
+    const createElement = tag => ({
+        nodeType: 1, tagName: tag.toUpperCase(), childNodes: [],
+        get textContent() { return this.childNodes.map(child => child.textContent).join(''); },
+        set textContent(value) { this.childNodes = [createTextNode(value)]; },
+        set innerHTML(value) {
+            assert.equal(value, '', 'The renderer must insert content as text, not HTML');
+            this.childNodes = [];
+        },
+        appendChild(child) { this.childNodes.push(child); return child; }
+    });
+    const container = createElement('div');
+    const status = createElement('p');
+    const context = {
+        window: {}, console: { log() {}, error() {} },
+        URL, AbortController, setTimeout, clearTimeout,
+        document: {
+            createElement, createTextNode, addEventListener() {},
+            querySelector: selector => ({ '#showcase-content': container, '#showcase-status': status })[selector] || null
+        },
+        fetch: async () => ({ ok: true, json: async () => snapshot })
+    };
+    vm.runInNewContext(readFileSync(path.join(__dirname, '../static/js/content-manager.js'), 'utf8'), context);
+    const manager = new context.window.ContentManager();
+    manager.stylingRules = JSON.parse(readFileSync(path.join(__dirname, '../static/data/about-content.json'), 'utf8')).styling;
+    manager.contentData = { showcase: [{
+        title: 'Curated project', url: 'https://github.com/ShawnXxy/curated',
+        description: 'Maintained description.', details: ['Maintained contribution.']
+    }] };
+    const descendants = node => (node.childNodes || []).flatMap(child => [child, ...descendants(child)]);
+    return { manager, container, status, context, nodes: () => descendants(container) };
+}
+
+test('renders generated metadata, contribution text and only cited safe source links', async () => {
+    const snapshot = await buildSnapshot(await collectProjects(publicGitHub, now), null, summarize);
+    const project = snapshot.projects[0];
+    project.commitCount = 2;
+    project.mergedPrCount = 2;
+    project.description = '<img src=x onerror=alert(1)>';
+    project.contribution = '<script>alert(1)</script>';
+    project.sources.push({
+        id: 'readme', label: 'Uncited README', url: `${project.url}/blob/main/README.md`
+    });
+    snapshot.projects = [project];
+    const { manager, container, status, nodes } = createShowcaseRenderer(snapshot);
+    await manager.loadShowcaseData();
+    manager.renderShowcaseSection();
+    assert.equal(container.childNodes.length, 1);
+    assert.equal(container.childNodes[0].className, 'exp animated fadeInUp');
+    assert.equal(nodes().find(node => node.tagName === 'H4').textContent, `${project.title}: ${project.description}`);
+    assert.equal(nodes().find(node => node.className === 'showcase-meta').textContent,
+        'Pinned | Fork | 2 GitHub-counted commits | 2 merged PRs');
+    assert.equal(nodes().find(node => node.tagName === 'LI').textContent, project.contribution);
+    assert.ok(nodes().some(node => node.className === 'first-letter'));
+    assert.equal(nodes().filter(node => ['IMG', 'SCRIPT'].includes(node.tagName)).length, 0);
+    const links = nodes().filter(node => node.tagName === 'A');
+    assert.deepEqual(links.map(link => ({
+        text: link.textContent, href: link.href, target: link.target, rel: link.rel
+    })), [
+        { text: project.title, href: project.url, target: '_blank', rel: 'noopener' },
+        { text: 'Repository', href: project.url, target: '_blank', rel: 'noopener noreferrer' },
+        { text: 'Merged PR #2', href: `${project.url}/pull/2`, target: '_blank', rel: 'noopener noreferrer' }
+    ]);
+    assert.ok(!container.textContent.includes('Uncited README'));
+    assert.match(status.textContent, /Public GitHub activity over 90 days.*Data refreshed/);
+
+    project.contribution = '';
+    project.contributionSourceIds = [];
+    await manager.loadShowcaseData();
+    manager.renderShowcaseSection();
+    assert.equal(nodes().filter(node => node.tagName === 'UL').length, 0);
+    assert.equal(nodes().filter(node => node.tagName === 'A').length, 2);
+});
+
+test('renders generated-empty snapshots without curated entries and restores fallback on failure', async () => {
+    const snapshot = await buildSnapshot(await collectProjects(publicGitHub, now), null, summarize);
+    const { manager, container, status, context, nodes } = createShowcaseRenderer(snapshot);
+    await manager.loadShowcaseData();
+    manager.renderShowcaseSection();
+    assert.equal(container.childNodes.length, 3);
+
+    snapshot.projects = [];
+    await manager.loadShowcaseData();
+    manager.renderShowcaseSection();
+    assert.equal(container.childNodes.length, 0);
+    assert.match(status.textContent, /No public projects found/);
+
+    context.fetch = async () => ({ ok: false, status: 503 });
+    await manager.loadShowcaseData();
+    manager.renderShowcaseSection();
+    assert.equal(container.childNodes.length, 1);
+    assert.equal(nodes().find(node => node.tagName === 'A').textContent, 'Curated project');
+    assert.equal(nodes().find(node => node.tagName === 'LI').textContent, 'Maintained contribution.');
+    assert.equal(nodes().filter(node => ['showcase-meta', 'showcase-sources'].includes(node.className)).length, 0);
+    assert.match(status.textContent, /unavailable.*curated/i);
+
+    context.fetch = async () => ({
+        ok: true, json: async () => ({ ...snapshot, generatedAt: null, windowStart: null })
+    });
+    await manager.loadShowcaseData();
+    manager.renderShowcaseSection();
+    assert.equal(container.childNodes.length, 1);
+    assert.match(status.textContent, /curated.*have not run/i);
+});
+
+test('renders singular and plural commit and PR labels independently', async () => {
+    const snapshot = await buildSnapshot(await collectProjects(publicGitHub, now), null, summarize);
+    snapshot.projects = [{ ...snapshot.projects[0], pinned: false, isFork: false }];
+    const { manager, nodes } = createShowcaseRenderer(snapshot);
+    for (const [commits, prs, expected] of [
+        [0, 0, 'Recent work | 0 GitHub-counted commits | 0 merged PRs'],
+        [1, 2, 'Recent work | 1 GitHub-counted commit | 2 merged PRs'],
+        [2, 1, 'Recent work | 2 GitHub-counted commits | 1 merged PR'],
+        [1, 1, 'Recent work | 1 GitHub-counted commit | 1 merged PR']
+    ]) {
+        snapshot.projects[0].commitCount = commits;
+        snapshot.projects[0].mergedPrCount = prs;
+        await manager.loadShowcaseData();
+        manager.renderShowcaseSection();
+        assert.equal(nodes().find(node => node.className === 'showcase-meta').textContent, expected);
+    }
 });
 
 test('renders the maintained Profile while showcase loading is pending, then updates it', async () => {

@@ -44,7 +44,7 @@ function repositoryUrl(value, repository, suffix = '') {
 }
 
 async function githubRequest(endpoint, { params = {}, body, optional = false } = {}) {
-    const token = process.env.GH_TOKEN || process.env.git_token || process.env.GITHUB_TOKEN;
+    const token = process.env.GH_TOKEN || process.env.git_token;
     assert(token, 'Set GH_TOKEN (or git_token) for GitHub data access');
     const url = new URL(`https://api.github.com${endpoint}`);
     Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, String(value)));

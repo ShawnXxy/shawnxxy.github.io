@@ -413,8 +413,8 @@ class ContentManager {
                 metadata.textContent = [
                     project.pinned ? 'Pinned' : 'Recent work',
                     project.isFork ? 'Fork' : '',
-                    `${project.commitCount} GitHub-counted commits`,
-                    `${project.mergedPrCount} merged PRs`
+                    `${project.commitCount} GitHub-counted commit${project.commitCount === 1 ? '' : 's'}`,
+                    `${project.mergedPrCount} merged PR${project.mergedPrCount === 1 ? '' : 's'}`
                 ].filter(Boolean).join(' | ');
                 expDiv.appendChild(metadata);
             }

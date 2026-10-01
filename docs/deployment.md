@@ -13,6 +13,9 @@ In the repository's Settings:
 
 GitHub supplies `GITHUB_TOKEN` automatically; it does not need a manually created repository secret. The static artifact job declares `contents: read` and `pages: read`; the deployment job declares `pages: write` and `id-token: write`.
 
+Showcase collection uses a separate, explicitly configured `GIT_TOKEN` with
+cross-repository read access, not the automatic workflow token.
+
 During deployment, the workflow substitutes the Azure Maps key into `static\js\env-config.js`. Visitors can read this client-side key; storing it as a GitHub secret keeps it out of source control, not private after publication. Do not commit credentials or upload a local `.env` as site content.
 
 ## Publish the site
@@ -115,15 +118,16 @@ or timed-out request displays the curated fallback with an explanatory status.
    personal access token with the **Copilot Requests** permission and access to
    your Copilot plan. AI requests use that account's allowance or billing.
    See [Copilot CLI authentication](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference#copilot-login-options).
-2. Public data collection uses the existing `GIT_TOKEN` repository secret when
-   configured, otherwise the workflow's `GITHUB_TOKEN`. The data-access token
-   needs read access to the required public profile and repository fields,
-   including any required organization authorization. SAML errors are failures,
-   not evidence of no contributions.
+2. Set the required `GIT_TOKEN` repository secret to a personal access token or
+   GitHub App token authorized to read the public profile and all pinned or
+   contributed repositories used by the showcase. Include any required
+   organization authorization. There is no automatic workflow-token fallback;
+   API and SAML errors fail the refresh rather than implying no contributions.
 3. Configure GitHub Pages to use GitHub Actions, then run **Build and Deploy to
    GitHub Pages** on `main`. Inspect a successful run and the generated showcase
-   before relying on unattended publication. Missing Copilot credentials block
-   production deployment instead of silently skipping generation.
+   before relying on unattended publication. Preflight requires both tokens
+   before installing dependencies or generating content. Missing credentials
+   block production deployment instead of silently skipping generation.
 
 The workflow installs Copilot CLI `1.0.90` with Node.js 22. Its daily schedule is
 not a real-time guarantee; GitHub can delay runs or disable a public repository's

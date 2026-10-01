@@ -72,13 +72,19 @@ npm install --global @github/copilot@1.0.90
 ```
 
 Set `git_token` (or `GH_TOKEN`) and `COPILOT_GITHUB_TOKEN` in the process
-environment or the repository-root `.env`, then run:
+environment or the repository-root `.env`. The data token must be authorized
+for the public pinned and contributed repositories; `GITHUB_TOKEN` is not used
+as a fallback by the showcase generator. Then run:
 
 ```powershell
 npm run build-showcase
 npm test
 python -m http.server 8000 --bind 127.0.0.1 --directory .\static
 ```
+
+The showcase checks exercise the real renderer with a small DOM fixture,
+including metadata, contribution text, cited links, singular/plural labels,
+empty snapshots, and curated fallbacks.
 
 Never put GitHub or Copilot tokens under `static/`, in browser configuration, or
 in generated JSON. Keep `.env` at the repository root and do not serve that

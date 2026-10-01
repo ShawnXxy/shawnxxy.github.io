@@ -76,3 +76,26 @@ test('the static job allows a cold-cache refresh plus setup and artifact work', 
     const minutes = Number(staticJob.match(/^    timeout-minutes: (\d+)/m)?.[1]);
     assert.ok(minutes >= 60, 'Allow at least 60 minutes for nine three-minute summaries and the other job steps');
 });
+
+test('showcase credential preflight requires explicit data and Copilot tokens', () => {
+    const preflight = workflow.match(/    - name: Check (?:Copilot|showcase) credentials\r?\n([\s\S]*?)(?=\r?\n    - name:)/)?.[1];
+    assert.ok(preflight, 'A credential preflight must precede generation');
+    assert.match(preflight, /GIT_TOKEN: \$\{\{ secrets\.GIT_TOKEN \}\}/);
+    assert.match(preflight, /COPILOT_GITHUB_TOKEN: \$\{\{ secrets\.COPILOT_GITHUB_TOKEN \}\}/);
+    assert.match(workflow, /GH_TOKEN: \$\{\{ secrets\.GIT_TOKEN \}\}/);
+    const script = preflight.match(/node <<'NODE'\r?\n([\s\S]*?)\r?\n        NODE/)?.[1];
+    assert.ok(script, 'The preflight must have an executable credential check');
+    for (const env of [
+        {}, { GIT_TOKEN: 'data-test-token' }, { COPILOT_GITHUB_TOKEN: 'copilot-test-token' },
+        { GIT_TOKEN: '', COPILOT_GITHUB_TOKEN: 'copilot-test-token' },
+        { GIT_TOKEN: 'data-test-token', COPILOT_GITHUB_TOKEN: 'copilot-test-token' }
+    ]) {
+        const missing = ['GIT_TOKEN', 'COPILOT_GITHUB_TOKEN'].filter(name => !env[name]);
+        const process = { env, exitCode: 0 };
+        const messages = [];
+        runInNewContext(script, { process, console: { error: message => messages.push(message) } });
+        assert.equal(process.exitCode, missing.length ? 1 : 0);
+        for (const name of missing) assert.ok(messages.some(message => message.includes(name)));
+        assert.ok(messages.every(message => !message.includes('test-token')));
+    }
+});

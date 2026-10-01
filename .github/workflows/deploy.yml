@@ -51,14 +51,18 @@ jobs:
         node-version: '22'
         cache: 'npm'
 
-    - name: Check Copilot credentials
+    - name: Check showcase credentials
       env:
+        GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
         COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
       run: |
-        if [ -z "$COPILOT_GITHUB_TOKEN" ]; then
-          echo "::error::Set the COPILOT_GITHUB_TOKEN repository secret with Copilot Requests permission."
-          exit 1
-        fi
+        node <<'NODE'
+        const missing = ['GIT_TOKEN', 'COPILOT_GITHUB_TOKEN'].filter(name => !process.env[name]);
+        if (missing.length) {
+          console.error(`::error::Set repository secrets: ${missing.join(', ')}. GIT_TOKEN needs cross-repository read access; COPILOT_GITHUB_TOKEN needs Copilot Requests permission.`);
+          process.exitCode = 1;
+        }
+        NODE
 
     - name: Install generators and Copilot CLI
       run: |
@@ -75,7 +79,7 @@ jobs:
 
     - name: Generate public project and contribution summaries
       env:
-        GH_TOKEN: ${{ secrets.GIT_TOKEN || github.token }}
+        GH_TOKEN: ${{ secrets.GIT_TOKEN }}
         COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
       run: npm run build-showcase
 

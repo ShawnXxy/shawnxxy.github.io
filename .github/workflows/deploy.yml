@@ -6,85 +6,102 @@ on:
   pull_request:
     branches: [ main ]
   workflow_dispatch: # Allow manual trigger
+  schedule:
+    - cron: '17 3 * * *'
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: "pages"
+  group: "pages-${{ github.event_name == 'pull_request' && github.event.pull_request.number || 'production' }}"
   cancel-in-progress: false
 
 jobs:
-  # Job for TypeScript build and deploy
-  build-typescript:
+  verify:
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.message, '[typescript]') || contains(github.event.head_commit.message, '[ts]')
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+    - run: npm test
+
+  deploy-static:
+    needs: verify
+    permissions:
+      contents: read
+      pages: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
     
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-      
+      with:
+        persist-credentials: false
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '22'
         cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Inject Environment Variables
-      run: |
-        # Replace placeholders in env-config.js for TypeScript build
-        if [ -f "src/js/env-config.js" ]; then
-          sed -i "s/\${AZURE_MAPS_SUBSCRIPTION_KEY}/${{ secrets.AZURE_MAPS_SUBSCRIPTION_KEY }}/g" src/js/env-config.js
-          sed -i "s/\${GITHUB_TOKEN}/${{ secrets.GITHUB_TOKEN }}/g" src/js/env-config.js
-          echo "Environment variables injected for TypeScript build"
-        else
-          echo "Warning: src/js/env-config.js not found for TypeScript build"
-        fi
-      env:
-        AZURE_MAPS_SUBSCRIPTION_KEY: ${{ secrets.AZURE_MAPS_SUBSCRIPTION_KEY }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-    - name: Build TypeScript
-      run: npm run build
-      
-    - name: Setup Pages
-      uses: actions/configure-pages@v5
-      
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: './dist'
-        
-  # Job for static files deploy (default mode)
-  deploy-static:
-    runs-on: ubuntu-latest
-    if: ${{ !contains(github.event.head_commit.message, '[typescript]') && !contains(github.event.head_commit.message, '[ts]') }}
-    
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
 
-    - name: Check deployment gate and Profile titles
-      run: node --test .github/tests/pages-deployment.test.js tests/profile-titles.test.js
+    - name: Check showcase credentials
+      env:
+        GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+        COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+      run: |
+        node <<'NODE'
+        const missing = ['GIT_TOKEN', 'COPILOT_GITHUB_TOKEN'].filter(name => !process.env[name]);
+        if (missing.length) {
+          console.error(`::error::Set repository secrets: ${missing.join(', ')}. GIT_TOKEN needs cross-repository read access; COPILOT_GITHUB_TOKEN needs Copilot Requests permission.`);
+          process.exitCode = 1;
+        }
+        NODE
+
+    - name: Install generators and Copilot CLI
+      run: |
+        npm ci
+        npm install --global @github/copilot@1.0.90 --no-fund --no-audit
+
+    - name: Restore the last generated showcase
+      uses: actions/cache/restore@v4
+      with:
+        path: static/data/github-showcase.json
+        key: showcase-v1-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+        restore-keys: |
+          showcase-v1-${{ runner.os }}-
+
+    - name: Generate public project and contribution summaries
+      env:
+        GH_TOKEN: ${{ secrets.GIT_TOKEN }}
+        COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+      run: npm run build-showcase
+
+    - name: Cache the successful showcase snapshot
+      uses: actions/cache/save@v4
+      with:
+        path: static/data/github-showcase.json
+        key: showcase-v1-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
       
     - name: Inject Environment Variables
       run: |
-        # Replace placeholders in env-config.js for static deployment
-        if [ -f "static/js/env-config.js" ]; then
-          sed -i "s/\${AZURE_MAPS_SUBSCRIPTION_KEY}/${{ secrets.AZURE_MAPS_SUBSCRIPTION_KEY }}/g" static/js/env-config.js
-          sed -i "s/\${GITHUB_TOKEN}/${{ secrets.GITHUB_TOKEN }}/g" static/js/env-config.js
-          echo "Environment variables injected for static deployment"
-        else
-          echo "Warning: static/js/env-config.js not found"
-        fi
+        node <<'NODE'
+        const fs = require('node:fs');
+        const file = 'static/js/env-config.js';
+        const source = fs.readFileSync(file, 'utf8');
+        fs.writeFileSync(file, source.replaceAll(
+          "'${AZURE_MAPS_SUBSCRIPTION_KEY}'",
+          JSON.stringify(process.env.AZURE_MAPS_SUBSCRIPTION_KEY || '')
+        ));
+        NODE
       env:
         AZURE_MAPS_SUBSCRIPTION_KEY: ${{ secrets.AZURE_MAPS_SUBSCRIPTION_KEY }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
     - name: Setup Pages
       uses: actions/configure-pages@v5
@@ -94,18 +111,19 @@ jobs:
       with:
         path: './static'
         
-  # Unified deploy job
   deploy:
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: [build-typescript, deploy-static]
+    needs: deploy-static
     if: >-
-      always() &&
       github.ref == 'refs/heads/main' &&
-      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
-      (needs.build-typescript.result == 'success' || needs.deploy-static.result == 'success')
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') &&
+      needs.deploy-static.result == 'success'
     
     steps:
     - name: Deploy to GitHub Pages
@@ -122,16 +140,9 @@ jobs:
         echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
-        if [ "${{ needs.build-typescript.result }}" == "success" ]; then
-          echo "### ✅ TypeScript Build Mode" >> $GITHUB_STEP_SUMMARY
-          echo "- Built from \`src/\` folder" >> $GITHUB_STEP_SUMMARY
-          echo "- Deployed from \`dist/\` folder" >> $GITHUB_STEP_SUMMARY
-          echo "- Commit message contained \`[typescript]\` or \`[ts]\`" >> $GITHUB_STEP_SUMMARY
-        elif [ "${{ needs.deploy-static.result }}" == "success" ]; then
-          echo "### ✅ Static Deployment Mode" >> $GITHUB_STEP_SUMMARY
-          echo "- Deployed directly from \`static/\` folder" >> $GITHUB_STEP_SUMMARY
-          echo "- No build process required" >> $GITHUB_STEP_SUMMARY
-        fi
+        echo "### ✅ Static Deployment Mode" >> $GITHUB_STEP_SUMMARY
+        echo "- Deployed directly from \`static/\` folder" >> $GITHUB_STEP_SUMMARY
+        echo "- No frontend build process required" >> $GITHUB_STEP_SUMMARY
         
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Deployment URL:** ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY

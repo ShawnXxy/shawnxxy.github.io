@@ -20,7 +20,8 @@ Serve `static\` as the web root rather than opening `index.html` directly. Node.
 
 | Location | What to edit |
 |---|---|
-| `static\data\about-content.json` | Profile section headings, introduction, personal information, know-how, project showcase, work experience, education, and text-styling rules. |
+| `static\data\about-content.json` | Profile section headings, introduction, personal information, know-how, curated showcase fallback, work experience, education, and text-styling rules. |
+| `static\data\github-showcase.json` | Generated project descriptions, contribution summaries, activity counts, and source links. Regenerate rather than editing this snapshot. |
 | `static\index.html` | Page structure, landing-page identity, social links, resume link, other headings, and Contact-panel details. |
 | `static\css\style.css` and `static\css\responsive.css` | Appearance and responsive layout. |
 | `static\js\` | Profile rendering, navigation, greeting, language-statistics display, and map behavior. |
@@ -32,7 +33,7 @@ Their HTML elements contain only `data-section-title` keys. Education, showcase,
 and experience entries keep their existing JSON structure.
 
 With Node.js installed, run the heading regression check with `node .\tests\profile-titles.test.js`.
-The static deployment job also runs this check before uploading the site.
+The `verify` job also runs this check before deployment.
 
 The content JSON is revalidated on every page load. The renderer's script URL
 includes a source hash to avoid loading an older cached renderer. If you edit
@@ -60,6 +61,39 @@ The generator uses `@octokit/core` and `dotenv` and writes:
 The generator requests up to 100 public repositories owned by `ShawnXxy`, excludes forks, and aggregates language byte counts. It keeps at most eight languages with at least 1% each. Individual language-request failures are logged and skipped, so review the output before committing refreshed data.
 
 The generator logs a token prefix; redact it before sharing console output. Keep `git_token` out of `static\` and never commit credentials. See [Deployment](deployment.md) for publishing the generated files.
+
+## Regenerate GitHub showcase
+
+Use Node.js 22 or later and install the matching Copilot CLI:
+
+```powershell
+npm ci
+npm install --global @github/copilot@1.0.90
+```
+
+Set `git_token` (or `GH_TOKEN`) and `COPILOT_GITHUB_TOKEN` in the process
+environment or the repository-root `.env`. The data token must be authorized
+for the public pinned and contributed repositories; `GITHUB_TOKEN` is not used
+as a fallback by the showcase generator. Then run:
+
+```powershell
+npm run build-showcase
+npm test
+python -m http.server 8000 --bind 127.0.0.1 --directory .\static
+```
+
+The showcase checks exercise the real renderer with a small DOM fixture,
+including metadata, contribution text, cited links, singular/plural labels,
+empty snapshots, and curated fallbacks.
+
+Never put GitHub or Copilot tokens under `static/`, in browser configuration, or
+in generated JSON. Keep `.env` at the repository root and do not serve that
+directory. The generated JSON contains summaries, source URLs, counts,
+`generatedAt`, per-project `summaryGeneratedAt`, and evidence hashes, but no raw
+README text, PR bodies, tokens, or Copilot session logs.
+
+For selection rules and workflow credentials, see
+[Automated showcase](deployment.md#automated-showcase).
 
 ## Preview Azure Maps
 

@@ -6,6 +6,7 @@ const { runInNewContext } = require('node:vm');
 
 const root = join(__dirname, '..');
 const data = JSON.parse(readFileSync(join(root, 'static', 'data', 'about-content.json'), 'utf8'));
+const showcase = JSON.parse(readFileSync(join(root, 'static', 'data', 'github-showcase.json'), 'utf8'));
 const html = readFileSync(join(root, 'static', 'index.html'), 'utf8');
 const source = readFileSync(join(root, 'static', 'js', 'content-manager.js'), 'utf8');
 const profile = html.match(/<section class="content" id="about">([\s\S]*?)<\/section>/);
@@ -42,6 +43,7 @@ const errors = [];
 let onReady;
 const context = {
     window: {},
+    AbortController, clearTimeout,
     console: { log() {}, error: message => errors.push(message) },
     document: {
         addEventListener(event, listener) {
@@ -102,8 +104,12 @@ async function checkLoading() {
     delete cachedData.sections.titles;
     const latestData = structuredClone(data);
     context.fetch = async (url, options = {}) => {
-        assert.equal(url, '../data/about-content.json');
         const revalidates = ['no-cache', 'no-store', 'reload'].includes(options.cache);
+        if (url === './data/github-showcase.json') {
+            assert.ok(revalidates, 'Generated showcase data must also be revalidated');
+            return { ok: true, json: async () => structuredClone(showcase) };
+        }
+        assert.equal(url, '../data/about-content.json');
         return { ok: true, json: async () => structuredClone(revalidates ? latestData : cachedData) };
     };
 
@@ -114,7 +120,7 @@ async function checkLoading() {
             prototype[method] = () => {};
         }
     }
-    context.setTimeout = callback => callback();
+    context.setTimeout = (callback, delay) => delay === 500 ? callback() : setTimeout(callback, delay);
     errors.length = 0;
     headings.forEach(heading => { heading.innerHTML = ''; });
     assert.equal(typeof onReady, 'function');

@@ -11,7 +11,7 @@ In the repository's Settings:
 3. Check that the `github-pages` environment permits deployment from `main`.
 4. Configure the [showcase credentials](#showcase-credentials) before publishing.
 
-GitHub supplies `GITHUB_TOKEN` automatically; it does not need a manually created repository secret. The artifact jobs declare `contents: read` and `pages: read`; the deployment job declares `pages: write` and `id-token: write`.
+GitHub supplies `GITHUB_TOKEN` automatically; it does not need a manually created repository secret. The static artifact job declares `contents: read` and `pages: read`; the deployment job declares `pages: write` and `id-token: write`.
 
 During deployment, the workflow substitutes the Azure Maps key into `static\js\env-config.js`. Visitors can read this client-side key; storing it as a GitHub secret keeps it out of source control, not private after publication. Do not commit credentials or upload a local `.env` as site content.
 
@@ -25,7 +25,7 @@ Pull requests targeting `main` run `verify`, including the deployment-gate, Prof
 
 To check the deployment gate locally, run `node .github\tests\pages-deployment.test.js` from the repository root with Node.js installed.
 
-Avoid `[typescript]` and `[ts]` in push commit messages. Those tags select the legacy `build-typescript` job, which calls `npm run build`; the repository has no such npm script or implemented TypeScript toolchain.
+Every permitted deployment uses `deploy-static`; commit messages do not select a different build mode.
 
 ## Publish updated language statistics
 
@@ -85,6 +85,10 @@ Each Copilot invocation has a three-minute deadline. Timeout, cancellation, and
 output-limit failures terminate the owned process tree before temporary files
 are removed. If termination fails, the generator reports the failure and keeps
 the temporary directory rather than deleting files a process may still use.
+
+The static job has a 60-minute budget. Nine sequential Copilot invocations can
+use nearly 27 minutes, leaving the remaining budget for dependency installation,
+GitHub collection, caching, and artifact upload.
 
 The Actions cache retains the last successful snapshot. Unchanged evidence and
 instructions reuse the existing summary; counts and refresh dates still update.

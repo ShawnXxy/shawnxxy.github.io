@@ -33,7 +33,7 @@ Their HTML elements contain only `data-section-title` keys. Education, showcase,
 and experience entries keep their existing JSON structure.
 
 With Node.js installed, run the heading regression check with `node .\tests\profile-titles.test.js`.
-The `verify` job also runs this check before either deployment path.
+The `verify` job also runs this check before deployment.
 
 The content JSON is revalidated on every page load. The renderer's script URL
 includes a source hash to avoid loading an older cached renderer. If you edit

@@ -582,6 +582,16 @@ ul.info-list li strong {
     margin-top: 70px;
 }
 
+.showcase-status, .showcase-meta, .showcase-sources {
+    color: #666;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+#showcase-content {
+    overflow-wrap: anywhere;
+}
+
 .exp .hgroup h4, .exp .hgroup h5 {
     text-transform: none;
     margin-bottom: 10px;
@@ -1229,5 +1239,3 @@ footer{
 	text-align:center;
 	color:white;
 }
-
-

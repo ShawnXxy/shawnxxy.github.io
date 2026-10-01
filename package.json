@@ -4,7 +4,9 @@
   "description": "Portfolio website with automated GitHub language data updates",
   "type": "commonjs",
   "scripts": {
-    "build-languages": "node static/js/generate-language-data.js"
+    "build-languages": "node static/js/generate-language-data.js",
+    "build-showcase": "node scripts/generate-showcase-data.js",
+    "test": "node --test .github/tests/pages-deployment.test.js scripts/showcase.test.js tests/profile-titles.test.js"
   },
   "dependencies": {
     "@octokit/core": "^6.1.2",

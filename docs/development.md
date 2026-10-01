@@ -32,6 +32,12 @@ Their HTML elements contain only `data-section-title` keys. Education, showcase,
 and experience entries keep their existing JSON structure.
 
 With Node.js installed, run the heading regression check with `node .\tests\profile-titles.test.js`.
+The static deployment job also runs this check before uploading the site.
+
+The content JSON is revalidated on every page load. The renderer's script URL
+includes a source hash to avoid loading an older cached renderer. If you edit
+`static\js\content-manager.js`, update its `v` value in `static\index.html` to the
+hash reported by the heading check.
 
 Contact details appear in both the profile JSON and `index.html`; editing one does not update the other. Map coordinates and controls are configured separately in `static\js\azure-maps-integration.js`.
 

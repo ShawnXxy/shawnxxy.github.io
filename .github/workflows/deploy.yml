@@ -68,6 +68,9 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
+
+    - name: Check deployment gate
+      run: node .github/tests/pages-deployment.test.js
       
     - name: Inject Environment Variables
       run: |
@@ -98,7 +101,11 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: [build-typescript, deploy-static]
-    if: always() && (needs.build-typescript.result == 'success' || needs.deploy-static.result == 'success')
+    if: >-
+      always() &&
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      (needs.build-typescript.result == 'success' || needs.deploy-static.result == 'success')
     
     steps:
     - name: Deploy to GitHub Pages

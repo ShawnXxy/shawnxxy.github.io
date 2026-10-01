@@ -20,7 +20,9 @@ Push or merge changes into `main` to trigger the normal deployment path.
 
 For a manual deployment, open Actions > Build and Deploy to GitHub Pages > Run workflow, select `main`, and run it. Confirm that `deploy-static` and `deploy` succeed, then open the published site.
 
-The workflow also runs for pull requests targeting `main`. Those runs include the deployment job rather than a separate preview-only path; environment restrictions and secret availability can prevent deployment. Do not treat this workflow as validation-only for pull requests.
+Pull requests targeting `main` still run `deploy-static`, including the deployment-gate check and artifact upload, but skip `deploy`. Publishing is limited to pushes or manual runs on `main` after an artifact job succeeds.
+
+To check the deployment gate locally, run `node .github\tests\pages-deployment.test.js` from the repository root with Node.js installed.
 
 Avoid `[typescript]` and `[ts]` in push commit messages. Those tags select the legacy `build-typescript` job, which calls `npm run build`; the repository has no such npm script or implemented TypeScript toolchain.
 

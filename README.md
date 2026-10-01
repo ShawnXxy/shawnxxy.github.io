@@ -104,6 +104,13 @@ Edit `static/data/about-content.json` to update:
 - Project information
 - Contact details
 
+All six Profile headings, including Know-how, are defined in `sections.titles`.
+Edit those strings to rename headings; `ContentManager` renders them on page load.
+The HTML contains only `data-section-title` keys. Education, showcase, and experience
+entries keep their existing JSON structure.
+
+Run the heading regression check with `node .\tests\profile-titles.test.js`.
+
 ### GitHub Language Data
 
 Generated automatically from GitHub API:

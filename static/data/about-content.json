@@ -1,7 +1,14 @@
 {
   "sections": {
+    "titles": {
+      "whoAmI": "Who am I ?",
+      "skills": "My Spellbook Usage (Per GitHub)",
+      "knowHow": "Know–how",
+      "showcase": "My Showcase",
+      "experience": "My Footprint",
+      "education": "My Brain Upgrades"
+    },
     "whoAmI": {
-      "title": "Who am I ?",
       "content": [
         "Self-motivated team player and Knowledge seeking professional;",
         "Experienced in mutliple programing languages like C-Sharp, Python, Shell, JavaScript, Java, PHP, HTML/CSS;",

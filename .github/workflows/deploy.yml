@@ -69,8 +69,8 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Check deployment gate
-      run: node .github/tests/pages-deployment.test.js
+    - name: Check deployment gate and Profile titles
+      run: node --test .github/tests/pages-deployment.test.js tests/profile-titles.test.js
       
     - name: Inject Environment Variables
       run: |

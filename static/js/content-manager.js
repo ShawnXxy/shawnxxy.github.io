@@ -12,7 +12,7 @@ class ContentManager {
      */
     async loadContentData() {
         try {
-            const response = await fetch('../data/about-content.json');
+            const response = await fetch('../data/about-content.json', { cache: 'no-cache' });
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }

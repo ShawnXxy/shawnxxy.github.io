@@ -20,11 +20,18 @@ Serve `static\` as the web root rather than opening `index.html` directly. Node.
 
 | Location | What to edit |
 |---|---|
-| `static\data\about-content.json` | Profile introduction, personal information, know-how, project showcase, work experience, education, and text-styling rules. |
-| `static\index.html` | Page structure, landing-page identity, social links, resume link, headings, and Contact-panel details. |
+| `static\data\about-content.json` | Profile section headings, introduction, personal information, know-how, project showcase, work experience, education, and text-styling rules. |
+| `static\index.html` | Page structure, landing-page identity, social links, resume link, other headings, and Contact-panel details. |
 | `static\css\style.css` and `static\css\responsive.css` | Appearance and responsive layout. |
 | `static\js\` | Profile rendering, navigation, greeting, language-statistics display, and map behavior. |
 | `static\images\` and `static\downloadable\` | Images and downloadable files. |
+
+All six Profile headings, including Know-how, are defined in `sections.titles`.
+Edit those strings to rename headings; `ContentManager` renders them on page load.
+Their HTML elements contain only `data-section-title` keys. Education, showcase,
+and experience entries keep their existing JSON structure.
+
+With Node.js installed, run the heading regression check with `node .\tests\profile-titles.test.js`.
 
 Contact details appear in both the profile JSON and `index.html`; editing one does not update the other. Map coordinates and controls are configured separately in `static\js\azure-maps-integration.js`.
 

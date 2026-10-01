@@ -29,20 +29,20 @@ class ContentManager {
     /**
      * Apply styling using DOM manipulation instead of innerHTML
      */
-    applyStyleToText(text, container) {
+    applyStyleToText(text, container, stylingRules = this.stylingRules) {
         // Clear container
         container.innerHTML = '';
         
         let currentText = text;
         
         // Apply first letter styling
-        if (this.stylingRules?.firstLetterRule?.enabled) {
+        if (stylingRules?.firstLetterRule?.enabled) {
             const firstChar = currentText.charAt(0);
             const restOfText = currentText.slice(1);
             
             // Create first letter span
             const firstLetterSpan = document.createElement('span');
-            firstLetterSpan.className = this.stylingRules.firstLetterRule.className;
+            firstLetterSpan.className = stylingRules.firstLetterRule.className;
             firstLetterSpan.textContent = firstChar;
             
             container.appendChild(firstLetterSpan);
@@ -50,9 +50,9 @@ class ContentManager {
         }
         
         // Process remaining text for punctuation
-        if (this.stylingRules?.punctuationRule?.enabled) {
-            const punctuationChars = this.stylingRules.punctuationRule.characters;
-            const className = this.stylingRules.punctuationRule.className;
+        if (stylingRules?.punctuationRule?.enabled) {
+            const punctuationChars = stylingRules.punctuationRule.characters;
+            const className = stylingRules.punctuationRule.className;
             
             // Split text by punctuation
             let lastIndex = 0;
@@ -85,6 +85,28 @@ class ContentManager {
             const textNode = document.createTextNode(currentText);
             container.appendChild(textNode);
         }
+    }
+
+    renderSectionTitles() {
+        const titleStyling = {
+            punctuationRule: {
+                enabled: true,
+                className: 'punctuation-highlight',
+                characters: ['?', '\u2013']
+            }
+        };
+
+        document.querySelectorAll('#about [data-section-title]').forEach(heading => {
+            const key = heading.dataset.sectionTitle;
+            const title = this.contentData?.titles?.[key];
+
+            if (typeof title !== 'string' || title.trim().length === 0) {
+                console.error(`Missing or invalid section title: ${key}`);
+                return;
+            }
+
+            this.applyStyleToText(title, heading, titleStyling);
+        });
     }
 
     /**
@@ -479,6 +501,8 @@ class ContentManager {
             console.error('Failed to load content data');
             return;
         }
+
+        this.renderSectionTitles();
 
         console.log('Data loaded, rendering all sections...');
         console.log('Content data:', this.contentData);

@@ -5,6 +5,13 @@ const test = require('node:test');
 const { runInNewContext } = require('node:vm');
 
 const workflow = readFileSync(path.join(__dirname, '..', 'workflows', 'deploy.yml'), 'utf8');
+function jobBody(name) {
+    const jobs = workflow.split(/^jobs:\r?$/m)[1];
+    const body = jobs.split(new RegExp(`^  ${name}:\\r?$`, 'm'))[1];
+    assert.ok(body, `The ${name} job must exist`);
+    return body.split(/^  [\w-]+:\r?$/m)[0];
+}
+
 const deployJob = workflow.split(/^  deploy:\r?$/m)[1];
 assert.ok(deployJob, 'The deploy job must exist');
 const condition = deployJob.match(/^    if: (.*(?:\r?\n {6}.+)*)/m);
@@ -120,35 +127,49 @@ test('production mints a read-only app token immediately before collection', () 
     assert.ok(staticJob.indexOf('Create GitHub App token') < staticJob.indexOf('Generate public project'));
 });
 
-test('live app-access verification is manual, non-main, read-only and never uses Copilot', () => {
-    const verifyJob = workflow.split(/^  verify:\r?$/m)[1].split(/^  deploy-static:\r?$/m)[0];
-    const diagnostics = [
-        verifyJob.match(/    - name: Create app token for access check\r?\n([\s\S]*?)(?=\r?\n    - name:)/)?.[1],
-        verifyJob.match(/    - name: Verify GitHub App public data access\r?\n([\s\S]*)/)?.[1]
-    ];
-    for (const step of diagnostics) {
-        assert.ok(step, 'Both token creation and collection must be gated');
-        const expression = step.match(/^      if: (.*(?:\r?\n {8}.+)*)/m)?.[1].replace(/^>-\s*/, '');
-        assert.ok(expression);
-        for (const [event, ref, expected] of [
-            ['workflow_dispatch', 'refs/heads/feature', true],
-            ['workflow_dispatch', 'refs/heads/main', false],
-            ['workflow_dispatch', 'refs/tags/test', false],
-            ['pull_request', 'refs/heads/feature', false],
-            ['pull_request', 'refs/pull/4/merge', false],
-            ['push', 'refs/heads/feature', false],
-            ['schedule', 'refs/heads/main', false]
-        ]) {
-            assert.equal(runInNewContext(expression, {
-                github: { event_name: event, ref },
-                startsWith: (value, prefix) => value.startsWith(prefix)
-            }), expected, `${event} ${ref}`);
-        }
+test('branch verification never receives app credentials or performs live collection', () => {
+    const verifyJob = jobBody('verify');
+    assert.match(verifyJob, /run: npm test/);
+    assert.doesNotMatch(verifyJob,
+        /SHOWCASE_APP|GH_TOKEN|COPILOT_GITHUB_TOKEN|create-github-app-token|collectProjects|check-app-token/);
+});
+
+test('live app-access verification uses an isolated runner and a trusted main checkout', () => {
+    const accessJob = jobBody('verify-app-access');
+    assert.match(accessJob, /^    needs: verify\r?$/m);
+    assert.match(accessJob, /^    runs-on: ubuntu-latest\r?$/m);
+    assert.match(accessJob, /^    permissions:\r?\n      contents: read\r?$/m);
+    assert.match(accessJob, /^        ref: refs\/heads\/main\r?$/m);
+    assert.match(accessJob, /^        persist-credentials: false\r?$/m);
+    assert.equal([...accessJob.matchAll(/uses: actions\/checkout@/g)].length, 1);
+    assert.doesNotMatch(accessJob, /npm test|npm ci|download-artifact|actions\/cache|needs\.verify\.outputs/);
+    const expression = accessJob.match(/^    if: (.*(?:\r?\n {6}.+)*)/m)?.[1].replace(/^>-\s*/, '');
+    assert.ok(expression, 'The privileged job must have a manual-only gate');
+    for (const [event, ref, expected] of [
+        ['workflow_dispatch', 'refs/heads/feature', true],
+        ['workflow_dispatch', 'refs/heads/main', false],
+        ['workflow_dispatch', 'refs/tags/test', false],
+        ['pull_request', 'refs/heads/feature', false],
+        ['pull_request', 'refs/pull/5/merge', false],
+        ['push', 'refs/heads/feature', false],
+        ['schedule', 'refs/heads/main', false]
+    ]) {
+        assert.equal(runInNewContext(expression, {
+            github: { event_name: event, ref },
+            startsWith: (value, prefix) => value.startsWith(prefix)
+        }), expected, `${event} ${ref}`);
     }
+    const diagnostics = [
+        accessJob.match(/    - name: Create app token for access check\r?\n([\s\S]*?)(?=\r?\n    - name:)/)?.[1],
+        accessJob.match(/    - name: Verify GitHub App public data access\r?\n([\s\S]*)/)?.[1]
+    ];
+    assert.ok(diagnostics.every(Boolean));
     assert.match(diagnostics[0], /uses: actions\/create-github-app-token@v3/);
     assert.match(diagnostics[0], /permission-contents: read/);
     assert.match(diagnostics[0], /permission-pull-requests: read/);
     assert.match(diagnostics[1], /GH_TOKEN: \$\{\{ steps\.check-app-token\.outputs\.token \}\}/);
     assert.match(diagnostics[1], /collectProjects\(\)/);
-    assert.doesNotMatch(verifyJob, /COPILOT_GITHUB_TOKEN|build-showcase|refreshShowcase|upload-pages-artifact|deploy-pages@/);
+    assert.doesNotMatch(accessJob, /COPILOT_GITHUB_TOKEN|build-showcase|refreshShowcase|upload-pages-artifact|deploy-pages@/);
+    assert.ok(accessJob.indexOf('ref: refs/heads/main') < accessJob.indexOf('Create app token for access check'));
+    assert.ok(accessJob.indexOf('Create app token for access check') < accessJob.indexOf('Verify GitHub App public data access'));
 });

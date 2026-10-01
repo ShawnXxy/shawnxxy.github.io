@@ -30,11 +30,17 @@ To check the deployment gate locally, run `node .github\tests\pages-deployment.t
 
 Every permitted deployment uses `deploy-static`; commit messages do not select a different build mode.
 
-Manually running this workflow on a non-`main` branch runs the offline checks and
-a read-only GitHub App collection check. It does not call Copilot, write a
-showcase snapshot, upload a Pages artifact, or deploy. Only repository names,
-counts, and the collection window are logged. Pull-request runs do not receive
-the app credentials or perform this live check.
+Manually running this workflow on a non-`main` branch runs that branch's offline
+checks without app credentials. After they pass, `verify-app-access` runs on a
+separate hosted runner and checks out `refs/heads/main` for a read-only GitHub
+App collection check. No branch workspace, cache, or artifacts are used by this
+credentialed job. It validates the app against the trusted `main` collector,
+not unmerged collector changes.
+
+The access check does not call Copilot, write a showcase snapshot, upload a
+Pages artifact, or deploy. Only repository names, counts, and the collection
+window are logged. Pull-request runs do not receive the app credentials or
+perform this live check.
 
 ## Publish updated language statistics
 
@@ -131,10 +137,11 @@ or timed-out request displays the curated fallback with an explanatory status.
    Obtain any required repository or organization approval; registration alone
    does not prove access to the collector's GraphQL and REST queries.
 3. Before switching production credentials, manually run **Build and Deploy to
-   GitHub Pages** on the branch containing the app integration. The read-only
-   collection check exercises pinned repositories, contribution counts, merged
-   PR search, README reads, and commit history without publishing or using
-   Copilot. Resolve access failures rather than treating them as no activity.
+   GitHub Pages** on the branch containing the app integration. The isolated
+   collection job uses code from `main` to exercise pinned repositories,
+   contribution counts, merged PR search, README reads, and commit history
+   without publishing or using Copilot. Resolve access failures rather than
+   treating them as no activity.
 4. Configure GitHub Pages to use GitHub Actions, then run the workflow on `main`
    after merging. Production preflight requires the app variable, app private
    key, and Copilot credential before installation or generation. Missing

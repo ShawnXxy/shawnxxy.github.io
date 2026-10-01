@@ -29,11 +29,27 @@ jobs:
         node-version: '22'
     - run: npm test
 
+  verify-app-access:
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 60
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      startsWith(github.ref, 'refs/heads/') &&
+      github.ref != 'refs/heads/main'
+    steps:
+    - name: Checkout trusted collector
+      uses: actions/checkout@v4
+      with:
+        ref: refs/heads/main
+        persist-credentials: false
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
     - name: Create app token for access check
-      if: >-
-        github.event_name == 'workflow_dispatch' &&
-        startsWith(github.ref, 'refs/heads/') &&
-        github.ref != 'refs/heads/main'
       id: check-app-token
       uses: actions/create-github-app-token@v3
       with:
@@ -44,10 +60,6 @@ jobs:
         permission-pull-requests: read
 
     - name: Verify GitHub App public data access
-      if: >-
-        github.event_name == 'workflow_dispatch' &&
-        startsWith(github.ref, 'refs/heads/') &&
-        github.ref != 'refs/heads/main'
       env:
         GH_TOKEN: ${{ steps.check-app-token.outputs.token }}
       run: |

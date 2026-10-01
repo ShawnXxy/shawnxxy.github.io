@@ -38,11 +38,16 @@ const cases = [
     ['push', 'refs/heads/main', 'skipped', false],
     ['workflow_dispatch', 'refs/heads/main', 'skipped', false],
     ['workflow_dispatch', 'refs/heads/main', 'cancelled', false],
+    ['workflow_dispatch', 'refs/heads/main', 'success', false, true],
+    ['workflow_dispatch', 'refs/heads/feature', 'success', false, true],
+    ['push', 'refs/heads/main', 'success', true, true],
+    ['schedule', 'refs/heads/main', 'success', true, true],
 ];
 
-for (const [eventName, ref, staticResult, expected] of cases) {
+for (const [eventName, ref, staticResult, expected, checkAppAccess = false] of cases) {
     const actual = runInNewContext(expression, {
         github: { event_name: eventName, ref },
+        inputs: { check_app_access: checkAppAccess },
         needs: {
             'deploy-static': { result: staticResult },
         },
@@ -66,9 +71,13 @@ test('main push messages cannot bypass showcase generation', () => {
         });
         assert.equal(actual, true, `Showcase generation must run for ${message}`);
     }
-    for (const [eventName, ref] of cases) {
-        const actual = runInNewContext(expression, { github: { event_name: eventName, ref } });
-        const expected = ref === 'refs/heads/main' && ['push', 'workflow_dispatch', 'schedule'].includes(eventName);
+    for (const [eventName, ref, , , checkAppAccess = false] of cases) {
+        const actual = runInNewContext(expression, {
+            github: { event_name: eventName, ref },
+            inputs: { check_app_access: checkAppAccess }
+        });
+        const expected = ref === 'refs/heads/main' && ['push', 'workflow_dispatch', 'schedule'].includes(eventName) &&
+            (eventName !== 'workflow_dispatch' || !checkAppAccess);
         assert.equal(actual, expected, `Generation gate for ${eventName} ${ref}`);
     }
     assert.doesNotMatch(workflow, /^  build-typescript:/m, 'There must not be an alternate artifact path');
@@ -134,28 +143,40 @@ test('branch verification never receives app credentials or performs live collec
         /SHOWCASE_APP|GH_TOKEN|COPILOT_GITHUB_TOKEN|create-github-app-token|collectProjects|check-app-token/);
 });
 
-test('live app-access verification uses an isolated runner and a trusted main checkout', () => {
+test('all app-key consumers require the protected main-only environment', () => {
+    const jobs = [...workflow.split(/^jobs:\r?$/m)[1].matchAll(/^  ([\w-]+):\r?$/gm)].map(match => match[1]);
+    const consumers = jobs.filter(name => jobBody(name).includes('SHOWCASE_APP_PRIVATE_KEY'));
+    assert.deepEqual(consumers, ['verify-app-access', 'deploy-static']);
+    for (const name of consumers) {
+        assert.match(jobBody(name), /^    environment: showcase-data\r?$/m, `${name} must use the protected key`);
+    }
+});
+
+test('live app-access verification is an explicit main-only mode using the trusted workflow commit', () => {
     const accessJob = jobBody('verify-app-access');
     assert.match(accessJob, /^    needs: verify\r?$/m);
     assert.match(accessJob, /^    runs-on: ubuntu-latest\r?$/m);
     assert.match(accessJob, /^    permissions:\r?\n      contents: read\r?$/m);
-    assert.match(accessJob, /^        ref: refs\/heads\/main\r?$/m);
+    assert.match(accessJob, /^        ref: \$\{\{ github\.sha \}\}\r?$/m);
     assert.match(accessJob, /^        persist-credentials: false\r?$/m);
     assert.equal([...accessJob.matchAll(/uses: actions\/checkout@/g)].length, 1);
     assert.doesNotMatch(accessJob, /npm test|npm ci|download-artifact|actions\/cache|needs\.verify\.outputs/);
     const expression = accessJob.match(/^    if: (.*(?:\r?\n {6}.+)*)/m)?.[1].replace(/^>-\s*/, '');
     assert.ok(expression, 'The privileged job must have a manual-only gate');
-    for (const [event, ref, expected] of [
-        ['workflow_dispatch', 'refs/heads/feature', true],
-        ['workflow_dispatch', 'refs/heads/main', false],
-        ['workflow_dispatch', 'refs/tags/test', false],
-        ['pull_request', 'refs/heads/feature', false],
-        ['pull_request', 'refs/pull/5/merge', false],
-        ['push', 'refs/heads/feature', false],
-        ['schedule', 'refs/heads/main', false]
+    assert.match(workflow, /check_app_access:\r?\n {8}description:.*\r?\n {8}type: boolean\r?\n {8}default: false/);
+    for (const [event, ref, checkAppAccess, expected] of [
+        ['workflow_dispatch', 'refs/heads/main', true, true],
+        ['workflow_dispatch', 'refs/heads/main', false, false],
+        ['workflow_dispatch', 'refs/heads/feature', true, false],
+        ['workflow_dispatch', 'refs/tags/main', true, false],
+        ['pull_request', 'refs/heads/main', true, false],
+        ['pull_request', 'refs/pull/5/merge', true, false],
+        ['push', 'refs/heads/main', true, false],
+        ['schedule', 'refs/heads/main', true, false]
     ]) {
         assert.equal(runInNewContext(expression, {
             github: { event_name: event, ref },
+            inputs: { check_app_access: checkAppAccess },
             startsWith: (value, prefix) => value.startsWith(prefix)
         }), expected, `${event} ${ref}`);
     }
@@ -170,6 +191,6 @@ test('live app-access verification uses an isolated runner and a trusted main ch
     assert.match(diagnostics[1], /GH_TOKEN: \$\{\{ steps\.check-app-token\.outputs\.token \}\}/);
     assert.match(diagnostics[1], /collectProjects\(\)/);
     assert.doesNotMatch(accessJob, /COPILOT_GITHUB_TOKEN|build-showcase|refreshShowcase|upload-pages-artifact|deploy-pages@/);
-    assert.ok(accessJob.indexOf('ref: refs/heads/main') < accessJob.indexOf('Create app token for access check'));
+    assert.ok(accessJob.indexOf('ref: ${{ github.sha }}') < accessJob.indexOf('Create app token for access check'));
     assert.ok(accessJob.indexOf('Create app token for access check') < accessJob.indexOf('Verify GitHub App public data access'));
 });

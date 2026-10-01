@@ -5,7 +5,12 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch: # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      check_app_access:
+        description: Check GitHub App access only, without generating or publishing
+        type: boolean
+        default: false
   schedule:
     - cron: '17 3 * * *'
 
@@ -32,18 +37,19 @@ jobs:
   verify-app-access:
     needs: verify
     runs-on: ubuntu-latest
+    environment: showcase-data
     permissions:
       contents: read
     timeout-minutes: 60
     if: >-
       github.event_name == 'workflow_dispatch' &&
-      startsWith(github.ref, 'refs/heads/') &&
-      github.ref != 'refs/heads/main'
+      github.ref == 'refs/heads/main' &&
+      inputs.check_app_access
     steps:
     - name: Checkout trusted collector
       uses: actions/checkout@v4
       with:
-        ref: refs/heads/main
+        ref: ${{ github.sha }}
         persist-credentials: false
     - uses: actions/setup-node@v4
       with:
@@ -85,6 +91,7 @@ jobs:
 
   deploy-static:
     needs: verify
+    environment: showcase-data
     permissions:
       contents: read
       pages: read
@@ -92,7 +99,8 @@ jobs:
     timeout-minutes: 60
     if: >-
       github.ref == 'refs/heads/main' &&
-      (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') &&
+      (github.event_name != 'workflow_dispatch' || !inputs.check_app_access)
     
     steps:
     - name: Checkout
@@ -116,7 +124,7 @@ jobs:
         const missing = ['SHOWCASE_APP_CLIENT_ID', 'SHOWCASE_APP_PRIVATE_KEY', 'COPILOT_GITHUB_TOKEN']
           .filter(name => !process.env[name]);
         if (missing.length) {
-          console.error(`::error::Missing showcase configuration: ${missing.join(', ')}. Set the app Client ID variable, app private-key secret, and Copilot credential.`);
+          console.error(`::error::Missing showcase configuration: ${missing.join(', ')}. Set the app Client ID variable, the showcase-data environment's private-key secret, and the Copilot credential.`);
           process.exitCode = 1;
         }
         NODE
@@ -190,6 +198,7 @@ jobs:
     if: >-
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') &&
+      (github.event_name != 'workflow_dispatch' || !inputs.check_app_access) &&
       needs.deploy-static.result == 'success'
     
     steps:

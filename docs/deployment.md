@@ -9,7 +9,8 @@ In the repository's Settings:
 1. Under Pages, select GitHub Actions as the build and deployment source.
 2. Under Secrets and variables > Actions, add `AZURE_MAPS_SUBSCRIPTION_KEY` for the contact map.
 3. Check that the `github-pages` environment permits deployment from `main`.
-4. Configure the [showcase credentials](#showcase-credentials) before publishing.
+4. Configure the [showcase credentials](#showcase-credentials), keeping the app
+   private key only in the protected `showcase-data` environment.
 
 GitHub supplies `GITHUB_TOKEN` automatically; it does not need a manually created repository secret. The static artifact job declares `contents: read` and `pages: read`; the deployment job declares `pages: write` and `id-token: write`.
 
@@ -30,17 +31,17 @@ To check the deployment gate locally, run `node .github\tests\pages-deployment.t
 
 Every permitted deployment uses `deploy-static`; commit messages do not select a different build mode.
 
-Manually running this workflow on a non-`main` branch runs that branch's offline
-checks without app credentials. After they pass, `verify-app-access` runs on a
-separate hosted runner and checks out `refs/heads/main` for a read-only GitHub
-App collection check. No branch workspace, cache, or artifacts are used by this
-credentialed job. It validates the app against the trusted `main` collector,
-not unmerged collector changes.
+To check app access without publishing, run the workflow from `main` with
+`check_app_access` enabled. After the offline checks pass, `verify-app-access`
+runs on a separate hosted runner and checks out that trusted workflow commit
+for collection. No branch workspace, cache, or artifacts are used by this job.
+Manual runs from other branches do not run credentialed checks or publishing.
 
 The access check does not call Copilot, write a showcase snapshot, upload a
-Pages artifact, or deploy. Only repository names, counts, and the collection
+Pages artifact, or publish the site. Only repository names, counts, and the collection
 window are logged. Pull-request runs do not receive the app credentials or
-perform this live check.
+perform this live check. Leave `check_app_access` disabled for a normal manual
+deployment; pushes and scheduled runs retain their normal publishing behavior.
 
 ## Publish updated language statistics
 
@@ -131,21 +132,32 @@ or timed-out request displays the curated fallback with an explanatory status.
    your Copilot plan. AI requests use that account's allowance or billing.
    See [Copilot CLI authentication](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference#copilot-login-options).
 2. Set the repository Actions variable `SHOWCASE_APP_CLIENT_ID` to the GitHub
-   App's Client ID and the repository Actions secret `SHOWCASE_APP_PRIVATE_KEY`
-   to its complete PEM private key. Install the app on the repository owner's
-   account with Contents and Pull requests permissions set to read-only.
-   Obtain any required repository or organization approval; registration alone
-   does not prove access to the collector's GraphQL and REST queries.
-3. Before switching production credentials, manually run **Build and Deploy to
-   GitHub Pages** on the branch containing the app integration. The isolated
-   collection job uses code from `main` to exercise pinned repositories,
-   contribution counts, merged PR search, README reads, and commit history
-   without publishing or using Copilot. Resolve access failures rather than
-   treating them as no activity.
-4. Configure GitHub Pages to use GitHub Actions, then run the workflow on `main`
-   after merging. Production preflight requires the app variable, app private
-   key, and Copilot credential before installation or generation. Missing
-   configuration fails deployment instead of silently skipping generation.
+   App's Client ID. Create a `showcase-data` environment with **Selected branches
+   and tags** restricted to the `main` branch only, no required reviewers, and
+   administrator bypass disabled. Store the complete PEM private key as that
+   environment's `SHOWCASE_APP_PRIVATE_KEY` secret. Remove any repository-level
+   copy of the same secret after moving it; otherwise modified branch workflows
+   could still access that copy without the environment's protection.
+3. Install the app on the repository owner's account with Contents and Pull
+   requests permissions set to read-only. Obtain any required repository or
+   organization approval; registration alone does not prove access to the
+   collector's GraphQL and REST queries.
+4. Once this workflow is on `main`, manually run **Build and Deploy to GitHub
+   Pages** from `main` with `check_app_access` enabled. The isolated job uses
+   the trusted workflow commit to exercise pinned repositories, contribution
+   counts, merged PR search, README reads, and commit history without publishing
+   or using Copilot. Resolve access failures rather than treating them as no
+   activity. Do not dispatch an unreviewed branch to access the app key.
+5. Configure GitHub Pages to use GitHub Actions, then run the workflow on `main`
+   with `check_app_access` disabled to publish. Production preflight requires
+   the app variable, environment-held private key, and Copilot credential
+   before installation or generation. Missing configuration fails deployment
+   instead of silently skipping generation.
+
+The environment's branch restriction is enforced by GitHub before releasing
+its secret, independently of workflow YAML conditions. It does not require
+per-run human approval for `main`. Both app-key-consuming jobs reference this
+environment; the branch verification job does not.
 
 The workflow uses `actions/create-github-app-token@v3` to mint a token immediately
 before collection, with read-only Contents and Pull requests permissions.
